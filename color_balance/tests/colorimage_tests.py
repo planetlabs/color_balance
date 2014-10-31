@@ -3,7 +3,7 @@ import unittest
 import numpy
 import cv2
 
-from planet_common.color_balance import colorimage, image_io as io
+from color_balance import colorimage, image_io as io
 
 
 class Tests(unittest.TestCase):
