@@ -1,3 +1,5 @@
+import subprocess
+
 try:
     from setuptools import setup
 except:
@@ -12,15 +14,26 @@ def parse_requirements(requirements_filename='requirements.txt'):
     return requirements
 
 
+try:
+    patch = subprocess.check_output(['git', 'rev-list', '--count', 'HEAD']).strip()
+except:
+    patch = 'no-git'
+
+VERSION = '0.1.%s' % patch
+
 config = dict(
     name='color_balance',
-    version=0.1.0
+    version=VERSION,
     url='https://github.com/planetlabs/color_balance',
     description='Color balancing',
     author='Jennifer Reiber Kyle',
     author_email='jennifer.kyle@planet.com',
     install_requires=parse_requirements(),
     packages=['color_balance'],
+    classifiers=[
+        "Development Status :: 1 - Planning",
+        "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    ]
 )
 
 setup(**config)
