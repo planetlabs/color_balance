@@ -1,4 +1,2 @@
-numpy
-cv2
-osgeo
-matplotlib.pyplot
+numpy >= 1.6
+GDAL >= 1.11
