@@ -32,7 +32,13 @@ config = dict(
     packages=['color_balance'],
     classifiers=[
         "Development Status :: 1 - Planning",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 2.7",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Information Technology",
+        "Intended Audience :: Science/Research",
         "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+        "Topic :: Scientific/Engineering :: GIS",
     ]
 )
 
