@@ -58,8 +58,11 @@ def match_histogram(in_img, ref_img, in_mask=None, ref_mask=None,
         out_bands = []
         in_lut = numpy.array(range(min_val, max_val+1), dtype=numpy.uint8)
         for i, band in enumerate(cv2.split(in_img)):
-            scale = float(ref_std[i])/in_std[i]
-            offset = ref_mean[i] - scale*in_mean[i]
+            if in_std[i] == 0:
+                scale = 0
+            else:
+                scale = float(ref_std[i])/in_std[i]
+            offset = ref_mean[i] - scale*in_mean[i] 
             lut = ci.scale_offset_lut(in_lut, scale=scale, offset=offset)
             out_bands.append(ci.apply_lut(band, lut))
 
@@ -86,7 +89,7 @@ def histogram_distances(image1, image2, distance=HIST_DISTANCE.CHI_SQUARED):
     return dist
 
 
-def histogram_distance(band1, band2, distance=HIST_DISTANCE.CHI_SQUARED):
+def histogram_distance(histA, histB, distance=HIST_DISTANCE.CHI_SQUARED):
     '''Measures the distance between the histogram of two bands.'''
     def chi_squared(histA, histB):
         return cv2.compareHist(histA.astype(numpy.float32),
@@ -111,9 +114,6 @@ def histogram_distance(band1, band2, distance=HIST_DISTANCE.CHI_SQUARED):
             HIST_DISTANCE.JENSEN_SHANNON: jensen_shannon}
 
     assert distance in fcns.keys()
-
-    histA = band1.get_histogram()
-    histB = band2.get_histogram()
 
     assert histA.shape == histB.shape
 
