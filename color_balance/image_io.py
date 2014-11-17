@@ -67,16 +67,13 @@ class CImage:
 
     def __init__(self, bands=[], alpha=None, metadata={}):
         self.bands = bands
-
-        if alpha is None:
-            self.create_alpha()
-        else:
-            self.alpha = alpha
-
+        self.alpha = alpha
         self.metadata = metadata
 
-    def create_alpha(self):
-        shape = self.bands[0].shape
+    def create_alpha(self, shape=None):
+        if shape is None:
+            shape = self.bands[0].shape
+
         self.alpha = 255*numpy.ones(shape, dtype=numpy.uint8)
 
     def load(self, filename):
@@ -112,7 +109,6 @@ class CImage:
         self.metadata['geotransform'] = gdal_ds.GetGeoTransform()
         self.metadata['projection'] = gdal_ds.GetProjection()
         self.metadata['rpc'] = gdal_ds.GetMetadata('RPC')
-
 
     def save(self, filename, options = []):
         options = list(options)
