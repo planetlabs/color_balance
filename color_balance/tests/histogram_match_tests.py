@@ -227,13 +227,13 @@ class HistogramDistanceTests(unittest.TestCase):
         self.assertAlmostEquals(
             chi_squared_distances['same_histogram_distance'], 0.0, 1)
         self.assertAlmostEquals(
-            chi_squared_distances['downsampled_histogram_distance'], 4.0, 1)
+            chi_squared_distances['downsampled_histogram_distance'], 6.0, 1)
         self.assertAlmostEquals(
-            chi_squared_distances['compressed_histogram_distance'], 4.0, 1)
+            chi_squared_distances['compressed_histogram_distance'], 6.0, 1)
         self.assertAlmostEquals(
-            chi_squared_distances['translated_histogram_distance'], 4.0, 1)
+            chi_squared_distances['translated_histogram_distance'], 2.0, 1)
         self.assertAlmostEquals(
-            chi_squared_distances['nonoverlapping_histogram_distance'], 12.0, 1)
+            chi_squared_distances['nonoverlapping_histogram_distance'], 6.0, 1)
 
         correlation_distances = self.run_histogram_distance_calculations(
             hm.HIST_DISTANCE.CORRELATION)
