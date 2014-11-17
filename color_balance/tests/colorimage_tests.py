@@ -51,6 +51,7 @@ class Tests(unittest.TestCase):
         numpy.testing.assert_array_equal(test_colormask, expected_mask)
 
         # Change CImage alpha mask and confirm colorimage mask matches
+        test_cimage.create_alpha()
         test_cimage.alpha[2, 2] = 0
         _, test_colormask = colorimage.convert_to_colorimage(test_cimage,
             band_indices=band_indices)
