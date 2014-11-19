@@ -32,32 +32,6 @@ class CImageTests(unittest.TestCase):
             numpy.ones((2,2), dtype=numpy.uint16))
         gdal_ds.SetGeoTransform([-1.0, 1.0, 0.0, 1.0, 0.0, -1.0])
 
-    def test__init__(self):
-        default_cimage = io.CImage()
-        self.assertIsNotNone(default_cimage)
-
-        band = 255 * numpy.ones((5, 5), dtype=numpy.uint8)
-        single_band_cimage = io.CImage(bands=[band])
-        self.assertEquals(single_band_cimage.bands, [band])
-
-        bands = [band, band, band]
-        multi_band_cimage = io.CImage(bands=bands)
-        self.assertEquals(multi_band_cimage.bands, bands)
-
-        alpha = 255 * numpy.ones((5, 5), dtype=numpy.uint8)
-        alpha_cimage = io.CImage(alpha=alpha)
-        numpy.testing.assert_array_equal(alpha_cimage.alpha, alpha)
-
-        metadata = {'geotransform': [-1.0, 1.0, 0.0, 1.0, 0.0, -1.0]}
-        metadata_cimage = io.CImage(metadata=metadata)
-        self.assertEquals(metadata_cimage.metadata, metadata)
-
-        all_arguments_cimage = io.CImage(
-            bands=bands, alpha=alpha, metadata=metadata)
-        self.assertEquals(all_arguments_cimage.bands, bands)
-        numpy.testing.assert_array_equal(all_arguments_cimage.alpha, alpha)
-        self.assertEquals(all_arguments_cimage.metadata, metadata)       
-
     def test_create_alpha(self):
         shape = (5, 5)
         expected_alpha = 255 * numpy.ones((5, 5), dtype=numpy.uint8)
@@ -68,7 +42,8 @@ class CImageTests(unittest.TestCase):
             alpha_from_shape_cimage.alpha, expected_alpha)
 
         band = numpy.ones((5, 5), dtype=numpy.uint8)
-        alpha_from_band_cimage = io.CImage(bands=[band])
+        alpha_from_band_cimage = io.CImage()
+        alpha_from_band_cimage.bands=[band]
         alpha_from_band_cimage.create_alpha()
         numpy.testing.assert_array_equal(
             alpha_from_band_cimage.alpha, expected_alpha)
@@ -87,7 +62,8 @@ class CImageTests(unittest.TestCase):
     def test_save(self):
         output_file = 'test_file.tif'
         test_band = 255 * numpy.ones((5, 5), dtype=numpy.uint8)
-        test_cimage = io.CImage([test_band])
+        test_cimage = io.CImage()
+        test_cimage.bands = [test_band]
         test_cimage.save(output_file)
 
         test_ds = gdal.Open(output_file)

@@ -22,12 +22,14 @@ from color_balance import colorimage, image_io as io
 
 
 class Tests(unittest.TestCase):
+
     def test_convert_to_colorimage(self):
         # Create 4-band, 8-bit CImage. Each band has intensity values equal to
         # the band number
         test_bands = [i * numpy.ones((5, 5), dtype=numpy.uint8) \
             for i in range(4)]
-        test_cimage = io.CImage(test_bands)
+        test_cimage = io.CImage()
+        test_cimage.bands = test_bands
 
         # Trying to load a 4-band image should raise an exception
         self.assertRaises(colorimage.ImagePropertyException,
@@ -75,7 +77,8 @@ class Tests(unittest.TestCase):
             return [band, band, band]
         test_bands = numpy_1d_to_3d(numpy.array([0, 256, 4095, 65535],
             dtype=numpy.uint16))
-        test_cimage = io.CImage(test_bands)
+        test_cimage = io.CImage()
+        test_cimage.bands=test_bands
 
         # No bit depth provided, should assume all 16 bits are used and divide
         # by 256 and mask should be blank

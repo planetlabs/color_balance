@@ -17,7 +17,7 @@ import numpy
 import cv2
 
 from osgeo import gdal, gdal_array
-from color_balance import colorimage as ci
+from color_balance import colorimage
 
 
 def load_mask(mask_path, conservative=True):
@@ -45,12 +45,12 @@ def load_image(image_path, band_indices=None, bit_depth=None,
                curve_function=None):
     '''Loads an image into a colorimage. If no bit depth is supplied, 8-bit
     is assumed. If no band indices are supplied, RGB is assumed.'''
-    raster = CImage()
-    raster.load(filename=image_path)
-    img, mask = ci.convert_to_colorimage(raster, band_indices=band_indices,
+    im_raster = CImage()
+    im_raster.load(image_path)
+    img, mask = colorimage.convert_to_colorimage(im_raster, band_indices=band_indices,
                                          bit_depth=bit_depth,
                                          curve_function=curve_function)
-    return img, mask, raster
+    return img, mask, im_raster
 
 
 def save_adjusted_image(filename, img, mask, cimage):
@@ -62,13 +62,13 @@ def save_adjusted_image(filename, img, mask, cimage):
     cimage.save(filename)
 
 
-class CImage:
+class CImage():
     '''Make IO easier'''
 
-    def __init__(self, bands=[], alpha=None, metadata={}):
-        self.bands = bands
-        self.alpha = alpha
-        self.metadata = metadata
+    def __init__(self):
+        self.bands = []
+        self.alpha = None
+        self.metadata = {}
 
     def create_alpha(self, shape=None):
         if shape is None:
@@ -97,6 +97,7 @@ class CImage:
             self.alpha = (self.alpha / 256).astype(numpy.uint8)
 
         # Read raster bands
+        # self.bands = []
         for band_n in range(1, band_count+1):
             band = gdal_ds.GetRasterBand(band_n)
             array = band.ReadAsArray()
