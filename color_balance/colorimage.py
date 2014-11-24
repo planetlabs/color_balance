@@ -27,6 +27,10 @@ class ImagePropertyException(Exception):
     pass
 
 
+class LUTException(Exception):
+    pass
+
+
 def convert_to_colorimage(cimage, band_indices=None,
                           bit_depth=None, curve_function=None):
     '''Creates a 3-band, 8-bit BGR colorimage from the bands of the input RGB
@@ -225,7 +229,20 @@ def scale_offset_lut(in_lut, scale=1.0, offset=0):
 
 def apply_lut(band, lut):
     '''Changes band intensity values based on intensity look up table (lut)'''
-    assert lut.dtype == band.dtype, ("Band ({}) and lut ({}) must be the " +
-                                     "same data type."
-                                     ).format(band.dtype, lut.dtype)
+    if lut.dtype != band.dtype:
+        raise LUTException("Band ({}) and lut ({}) must be the same data " +
+            "type.").format(band.dtype, lut.dtype)
     return numpy.take(lut, band, mode='clip')
+
+
+def apply_luts(image, luts):
+    '''Changes intensity values for each band in input image based on intensity
+    look up tables (luts)'''
+    in_bands = cv2.split(image)
+    if len(in_bands) != len(luts):
+        raise LUTException("image bands ({}) and lut ({}) must have the same" +
+            " number of entries.".format(len(image), len(luts)))
+
+    out_bands = [apply_lut(band, lut) \
+        for (band, lut) in zip(in_bands, luts)]
+    return cv2.merge(out_bands)

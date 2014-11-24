@@ -21,247 +21,105 @@ import cv2
 from color_balance import histogram_match as hm
 
 
-class HistogramMatchTests(unittest.TestCase):
+class Tests(unittest.TestCase):
     def setUp(self):
-        band = numpy.array([0, 1, 2, 3], dtype=numpy.uint8)
-        self.min_sequence_img = cv2.merge([band, band, band])
+        sequence_band = numpy.array(range(0,256), dtype=numpy.uint8)
+        first_half_band = numpy.array(range(0,128)*2, dtype=numpy.uint8)
+        second_half_band = numpy.array(range(128,256)*2, dtype=numpy.uint8)
+        spread_band = numpy.array(range(0,256,32)*32, dtype=numpy.uint8)
+        self.constant_band = numpy.ones(256, dtype=numpy.uint8)
 
-        band = numpy.array([252, 253, 254, 255], dtype=numpy.uint8)
-        self.max_sequence_img = cv2.merge([band, band, band])
+        self.compressed_img = cv2.merge(
+            [spread_band, first_half_band, second_half_band])
 
-        band = numpy.array([0, 50, 200, 255], dtype=numpy.uint8)
-        self.min_max_spread_img = cv2.merge([band, band, band])
+        self.sequence_img = cv2.merge([sequence_band]*3)
+        self.constant_img = cv2.merge([self.constant_band]*3)
 
-        band = numpy.array([0, 0, 0, 0], dtype=numpy.uint8)
-        self.min_constant_img = cv2.merge([band, band, band])
+    def test_match_histogram(self):
+        def luts_calculation(in_img, ref_img,
+            in_mask=None, ref_mask=None):
+            lut = numpy.ones(256, dtype=numpy.uint8)
+            luts = [lut, 2*lut, 3*lut]
+            return luts
 
-        band = numpy.array([255, 255, 255, 255], dtype=numpy.uint8)
-        self.max_constant_img = cv2.merge([band, band, band])
+        expected_img = cv2.merge(
+            [self.constant_band,
+             2*self.constant_band,
+             3*self.constant_band])
+        ret_img = hm.match_histogram(
+            luts_calculation, self.sequence_img, self.constant_img)
+        numpy.testing.assert_array_equal(ret_img, expected_img)
 
-        self.unique_input_img = cv2.merge((
-            numpy.array([0, 1, 2, 3], dtype=numpy.uint8),
-            numpy.array([50, 100, 150, 200], dtype=numpy.uint8),
-            numpy.array([252, 253, 254, 255], dtype=numpy.uint8),
-            ))
+    def test_cdf_normalization_luts(self):
+        sequence_to_compressed_luts = hm.cdf_normalization_luts(
+            self.sequence_img,
+            self.compressed_img)
+        sequence_to_spread_lut = numpy.array(
+            sorted(range(0, 256, 32) * 32),
+            dtype=numpy.uint8)
+        sequence_to_first_half_lut = numpy.array(
+            sorted(range(0, 128) * 2),
+            dtype=numpy.uint8)
+        sequence_to_second_half_lut = numpy.array(
+            sorted(range(128, 256) * 2),
+            dtype=numpy.uint8)
+        numpy.testing.assert_array_equal(sequence_to_compressed_luts,
+            [sequence_to_spread_lut,
+             sequence_to_first_half_lut,
+             sequence_to_second_half_lut])
 
-        self.repeating_input_img = cv2.merge((
-            numpy.array([0, 1, 1, 0], dtype=numpy.uint8),
-            numpy.array([100, 100, 100, 100], dtype=numpy.uint8),
-            numpy.array([200, 200, 225, 255], dtype=numpy.uint8),
-            ))
+        compressed_to_sequence_luts = hm.cdf_normalization_luts(
+            self.compressed_img,
+            self.sequence_img)
+        spread_to_sequence_lut = numpy.array(
+            sorted(range(31, 256, 32) * 32),
+            dtype=numpy.uint8)
+        first_half_to_sequence_lut = numpy.array(
+            range(1, 256, 2) + [255] * 128,
+            dtype=numpy.uint8)
+        second_half_to_sequence_lut = numpy.array(
+            [0] * 128 + range(1, 256, 2),
+            dtype=numpy.uint8)
+        numpy.testing.assert_array_equal(compressed_to_sequence_luts,
+            [spread_to_sequence_lut,
+             first_half_to_sequence_lut,
+             second_half_to_sequence_lut])
 
-    def test_match_histogram_cdf_norm_unique_input_values(self):
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.min_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)
-        numpy.testing.assert_array_equal(test_img, self.min_sequence_img)
+    def test_mean_std_luts(self):
+        sequence_to_compressed_luts = hm.mean_std_luts(
+            self.sequence_img,
+            self.compressed_img)
+        sequence_to_spread_lut = numpy.array(
+            [0]*15 + range(0, 49) + range(48, 176) + range(175, 239),
+            dtype=numpy.uint8)
+        sequence_to_first_half_lut = numpy.array(
+            [0] + sorted(range(0, 127) * 2) + [127],
+            dtype=numpy.uint8)
+        sequence_to_second_half_lut = numpy.array(
+            [127] + sorted(range(128, 255) * 2) + [255],
+            dtype=numpy.uint8)
+        numpy.testing.assert_array_equal(sequence_to_compressed_luts,
+            [sequence_to_spread_lut,
+             sequence_to_first_half_lut,
+             sequence_to_second_half_lut])
 
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.max_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)
-        numpy.testing.assert_array_equal(test_img, self.max_sequence_img)
+        compressed_to_sequence_luts = hm.mean_std_luts(
+            self.compressed_img,
+            self.sequence_img)
+        spread_to_sequence_lut = numpy.array(
+            range(14, 63) + range(64, 191) + range(192, 255) + [255] * 17,
+            dtype=numpy.uint8)
+        first_half_to_sequence_lut = numpy.array(
+            range(0, 256, 2) + [255] * 128,
+            dtype=numpy.uint8)
+        second_half_to_sequence_lut = numpy.array(
+            [0] * 128 + range(0, 256, 2),
+            dtype=numpy.uint8)
+        numpy.testing.assert_array_equal(compressed_to_sequence_luts,
+            [spread_to_sequence_lut,
+             first_half_to_sequence_lut,
+             second_half_to_sequence_lut])
 
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.min_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)
-        numpy.testing.assert_array_equal(test_img, self.min_constant_img)
-
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.max_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)
-        numpy.testing.assert_array_equal(test_img, self.max_constant_img)
-
-    def test_match_histogram_cdf_norm_repeating_input_values(self):
-        # Can't map repeated values to all unique values so result
-        # will deviate from reference image somewhat
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.min_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)
-        expected_img = cv2.merge((
-            numpy.array([1, 3, 3, 1], dtype=numpy.uint8),
-            numpy.array([3, 3, 3, 3], dtype=numpy.uint8),
-            numpy.array([1, 1, 2, 3], dtype=numpy.uint8),
-            ))
-        numpy.testing.assert_array_equal(test_img, expected_img)
-
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.max_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)       
-        expected_img = cv2.merge((
-            numpy.array([253, 255, 255, 253], dtype=numpy.uint8),
-            numpy.array([255, 255, 255, 255], dtype=numpy.uint8),
-            numpy.array([253, 253, 254, 255], dtype=numpy.uint8),
-            ))
-        numpy.testing.assert_array_equal(test_img, expected_img)
-
-        # Can map repeated values to constant values
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.min_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)
-        numpy.testing.assert_array_equal(test_img, self.min_constant_img)
-
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.max_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.CDF_NORM)
-        numpy.testing.assert_array_equal(test_img, self.max_constant_img)
-
-    def test_match_histogram_mean_std_unique_input_values(self):
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.min_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)
-        numpy.testing.assert_array_equal(test_img, self.min_sequence_img)
-
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.max_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)
-        numpy.testing.assert_array_equal(test_img, self.max_sequence_img)
-
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.min_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)
-        numpy.testing.assert_array_equal(test_img, self.min_constant_img)
-
-        test_img = hm.match_histogram(
-            self.unique_input_img,
-            self.max_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)
-        numpy.testing.assert_array_equal(test_img, self.max_constant_img)
-
-    def test_match_histogram_mean_std_repeating_input_values(self):
-        # Can't map repeated values to all unique values so result
-        # will deviate from reference image somewhat
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.min_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)
-        expected_img = cv2.merge((
-            numpy.array([0, 2, 2, 0], dtype=numpy.uint8),
-            numpy.array([1, 1, 1, 1], dtype=numpy.uint8),
-            numpy.array([0, 0, 1, 3], dtype=numpy.uint8),
-            ))
-        numpy.testing.assert_array_equal(
-            test_img.ravel(), expected_img.ravel())
-
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.max_sequence_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)       
-        expected_img = cv2.merge((
-            numpy.array([252, 254, 254, 252], dtype=numpy.uint8),
-            numpy.array([253, 253, 253, 253], dtype=numpy.uint8),
-            numpy.array([252, 252, 253, 255], dtype=numpy.uint8),
-            ))
-        numpy.testing.assert_array_equal(
-            test_img.ravel(), expected_img.ravel())
-
-        # Can map repeated values to constant values
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.min_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)
-        numpy.testing.assert_array_equal(test_img, self.min_constant_img)
-
-        test_img = hm.match_histogram(
-            self.repeating_input_img,
-            self.max_constant_img,
-            hist_match_method=hm.HIST_MATCH_METHOD.MEAN_STD)
-        numpy.testing.assert_array_equal(test_img, self.max_constant_img)    
-
-class HistogramDistanceTests(unittest.TestCase):
-    def setUp(self):
-        self.uniform_histogram = numpy.array(
-            [1, 1, 1, 1, 1, 1], dtype=numpy.uint8)
-        self.uniform_first_half_histogram = numpy.array(
-            [2, 2, 2, 0, 0, 0], dtype=numpy.uint8)
-        self.uniform_second_half_histogram = numpy.array(
-            [0, 0, 0, 2, 2, 2], dtype=numpy.uint8)
-        self.uniform_middle_histogram = numpy.array(
-            [0, 2, 2, 2, 0, 0], dtype=numpy.uint8)
-        self.downsampled_uniform_histogram = numpy.array(
-            [2, 0, 2, 0, 2, 0], dtype=numpy.uint8)
-
-    def run_histogram_distance_calculations(self, distance):
-        distances = {}
-        distances['same_histogram_distance'] = hm.histogram_distance(
-            self.uniform_histogram,
-            self.uniform_histogram, 
-            distance=distance)
-
-        distances['downsampled_histogram_distance'] = hm.histogram_distance(
-            self.uniform_histogram,
-            self.downsampled_uniform_histogram, 
-            distance=distance)        
-
-        distances['compressed_histogram_distance'] = hm.histogram_distance(
-            self.uniform_histogram,
-            self.uniform_first_half_histogram, 
-            distance=distance)
-
-        distances['translated_histogram_distance'] = hm.histogram_distance(
-            self.uniform_first_half_histogram,
-            self.uniform_middle_histogram, 
-            distance=distance)
-
-        distances['nonoverlapping_histogram_distance'] = hm.histogram_distance(
-            self.uniform_first_half_histogram,
-            self.uniform_second_half_histogram, 
-            distance=distance)
-
-        return distances
-
-    def test_histogram_distance(self):
-        chi_squared_distances = self.run_histogram_distance_calculations(
-            hm.HIST_DISTANCE.CHI_SQUARED)
-
-        self.assertAlmostEquals(
-            chi_squared_distances['same_histogram_distance'], 0.0, 1)
-        self.assertAlmostEquals(
-            chi_squared_distances['downsampled_histogram_distance'], 6.0, 1)
-        self.assertAlmostEquals(
-            chi_squared_distances['compressed_histogram_distance'], 6.0, 1)
-        self.assertAlmostEquals(
-            chi_squared_distances['translated_histogram_distance'], 2.0, 1)
-        self.assertAlmostEquals(
-            chi_squared_distances['nonoverlapping_histogram_distance'], 6.0, 1)
-
-        correlation_distances = self.run_histogram_distance_calculations(
-            hm.HIST_DISTANCE.CORRELATION)
-
-        self.assertAlmostEquals(
-            correlation_distances['same_histogram_distance'], 1.0, 0)
-        self.assertAlmostEquals(
-            correlation_distances['downsampled_histogram_distance'], 1.0, 1)
-        self.assertAlmostEquals(
-            correlation_distances['compressed_histogram_distance'], 1.0, 1)
-        self.assertAlmostEquals(
-            correlation_distances['translated_histogram_distance'], 0.3, 1)
-        self.assertAlmostEquals(
-            correlation_distances['nonoverlapping_histogram_distance'], -1.0, 1)
-
-        jensen_shannon_distances = self.run_histogram_distance_calculations(
-            hm.HIST_DISTANCE.JENSEN_SHANNON)
-
-        self.assertAlmostEquals(
-            jensen_shannon_distances['same_histogram_distance'], -12.0, 1)
-        self.assertAlmostEquals(
-            jensen_shannon_distances['downsampled_histogram_distance'], -8.26, 1)
-        self.assertAlmostEquals(
-            jensen_shannon_distances['compressed_histogram_distance'], -8.26, 1)
-        self.assertAlmostEquals(
-            jensen_shannon_distances['translated_histogram_distance'], -8.0, 1)
-        self.assertAlmostEquals(
-            jensen_shannon_distances['nonoverlapping_histogram_distance'], 0.0, 1)
 
 if __name__ == '__main__':
     unittest.main()
