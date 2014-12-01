@@ -97,7 +97,6 @@ class CImage():
             self.alpha = (self.alpha / 256).astype(numpy.uint8)
 
         # Read raster bands
-        # self.bands = []
         for band_n in range(1, band_count+1):
             band = gdal_ds.GetRasterBand(band_n)
             array = band.ReadAsArray()
