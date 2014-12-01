@@ -63,7 +63,7 @@ def save_adjusted_image(filename, img, mask, cimage):
 
 
 class CImage():
-    '''Make IO easier'''
+    '''Geospatial image file interface'''
 
     def __init__(self):
         self.bands = []
