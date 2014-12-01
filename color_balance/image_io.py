@@ -111,15 +111,14 @@ class CImage():
         self.metadata['projection'] = gdal_ds.GetProjection()
         self.metadata['rpc'] = gdal_ds.GetMetadata('RPC')
 
-    def save(self, filename, options = []):
-        options = list(options)
-        
+    def save(self, filename):        
         band_count = len(self.bands)
         ysize, xsize = self.bands[0].shape
 
+        options = []
         if band_count == 3:
             options.append('PHOTOMETRIC=RGB')
-        
+
         if self.alpha is not None:
             band_count += 1
             options.append('ALPHA=YES')
