@@ -125,13 +125,13 @@ class Tests(unittest.TestCase):
         test_mask = numpy.array([[255, 0], [255, 0]], dtype=numpy.uint8)
 
         # All entries at intensity 1
-        expected = numpy.zeros((256, 1))
+        expected = numpy.zeros((256))
         expected[1] = 4
         hist = colorimage.get_histogram(test_band)
         numpy.testing.assert_array_equal(hist, expected)
 
         # Two values masked, count should drop by two
-        expected = numpy.zeros((256, 1))
+        expected = numpy.zeros((256))
         expected[1] = 2
         hist = colorimage.get_histogram(test_band, mask=test_mask)
         numpy.testing.assert_array_equal(hist, expected)
