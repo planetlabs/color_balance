@@ -202,12 +202,6 @@ class Tests(unittest.TestCase):
         hist = colorimage.get_histogram(test_band, mask=test_mask)
         numpy.testing.assert_array_equal(hist, expected)
 
-        # Count converted to probability (all values at 1, so probability is 1)
-        expected = numpy.zeros((256, 1))
-        expected[1] = 1
-        hist = colorimage.get_histogram(test_band, normalized=True)
-        numpy.testing.assert_array_equal(hist, expected)
-
     def test_get_cdf(self):
         test_band = numpy.array([[0, 1], [2, 3]], dtype=numpy.uint8)
         test_mask = numpy.array([[255, 0], [255, 0]], dtype=numpy.uint8)

@@ -146,27 +146,20 @@ def get_mask_percent(mask):
     return mask_percent
 
 
-def get_histogram(band, mask=None, normalized=False):
+def get_histogram(band, mask=None):
     '''Calculate the histogram of a band. If a mask is provided, masked pixels
-    are not considered in the histogram calculation. If normalized is True, the
-    histogram entries are the count divided by the total number of pixels,
-    turning it into a distribution function.
+    are not considered in the histogram calculation.
 
     :param numpy array band: source for calculating histogram
     :param numpy array mask: array containing zero values at locations where
         pixels should not be considered, 255 elsewhere
-    :param boolean normalized: determines whether histogram pixel count will be
-        returned (if False) or relative frequency (if True)
-    :returns: count (or freqency) of pixels at each possible intensity value
+    :returns: count of pixels at each possible intensity value
     '''
     if band.max() > 255 or band.min() < 0:
         raise OutOfRangeException("Band values outside of [0, 255]")
 
     bit_depth = 256
     hist = cv2.calcHist([band], [0], mask, [bit_depth], [0, bit_depth])
-    if normalized:
-        # Turn histogram to pdf by normalizing to sum to 1
-        hist = hist * (1.0 / hist.sum())
     return hist
 
 
@@ -179,8 +172,9 @@ def get_cdf(band, mask=None):
         pixels should not be considered, 255 elsewhere
     :returns: cumulative sum of pixels at each possible intensity value
     '''
-    hist = get_histogram(band, mask, normalized=True)
-    cdf = hist.cumsum()
+    hist = get_histogram(band, mask)
+    normalized_hist = hist * (1.0 / hist.sum())
+    cdf = normalized_hist.cumsum()
     return cdf
 
 
