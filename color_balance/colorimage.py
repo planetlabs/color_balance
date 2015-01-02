@@ -18,6 +18,8 @@ import cv2
 
 from osgeo import gdal, gdal_array
 
+from color_balance import mask
+
 
 class OutOfRangeException(Exception):
     pass
@@ -63,9 +65,9 @@ def convert_to_colorimage(cimage, band_indices=None,
 
     # Make a mask from the CImage alpha channel
     if cimage.alpha is not None:
-        mask = cimage.alpha.astype(numpy.uint8)
+        cmask = cimage.alpha.astype(numpy.uint8)
     else:
-        mask = create_mask(cimage.bands[0])
+        cmask = mask.create_mask(cimage.bands[0])
 
     bands = []
     for i in band_indices:
@@ -100,50 +102,21 @@ def convert_to_colorimage(cimage, band_indices=None,
         # Mask out values above or below the 8-bit extents
         # This is only necessary if bit depth is given
         clip_max = band > 255
-        mask[clip_max] = 0
+        cmask[clip_max] = 0
         clip_min = band < 0
-        mask[clip_min] = 0
+        cmask[clip_min] = 0
         out_bands.append(band.astype(numpy.uint8))
 
-    # Convert to BGR to images are BGR.
-    return cv2.merge(list(reversed(out_bands))), mask
+    cimg = rgb_bands_to_colorimage(out_bands)
+    return cimg, cmask
 
 
-def create_mask(band, value=None):
-    '''Creates an openCV mask of the same size as the input band. If a value
-    is provided, the locations of pixels equal to the value are added to the
-    mask.'''
-    mask = 255 * numpy.ones(band.shape, dtype=numpy.uint8)
-    if value is not None:
-        cond = band == value
-        mask[cond] = 0
-    return mask
+def rgb_bands_to_colorimage(rgb_bands):
+    return cv2.merge(list(reversed(rgb_bands)))
 
 
-def combine_masks(masks):
-    '''Combines masks into one mask'''
-    mask = masks[0]
-    for add_mask in masks[1:]:
-        mask[add_mask == 0] = 0
-    return mask
-
-
-def map_masked(img, mask, value=0):
-    '''Maps intensity values of pixels that are masked to a new value'''
-    channels = []
-    for channel in cv2.split(img):
-        channel[mask == 0] = value
-        channels.append(channel)
-    img = cv2.merge(channels)
-    return img
-
-
-def get_mask_percent(mask):
-    '''Helper function for determining how many pixels are masked.'''
-    cond = mask == 0
-    num_masked = numpy.extract(cond, mask).size
-    mask_percent = float(100 * num_masked) / mask.size
-    return mask_percent
+def colorimage_to_rgb_bands(c_img):
+    return reversed(cv2.split(c_img))
 
 
 def get_histogram(band, mask=None):

@@ -20,27 +20,6 @@ from osgeo import gdal, gdal_array
 from color_balance import colorimage
 
 
-def load_mask(mask_path, conservative=True):
-    '''Loads a single-band mask image and adds it to the mask array.
-    If conservative is True, only totally-masked pixels are masked out.
-    Otherwise, all partially pixels are masked out.'''
-    gdal_ds = gdal.Open(mask_path)
-    if gdal_ds is None:
-        raise IOError('Mask could not be opened.')
-
-    band = gdal_ds.GetRasterBand(1)
-    mask_array = band.ReadAsArray()
-
-    if conservative:
-        # Partially-masked pixels set to unmasked
-        mask_array[mask_array > 0] = 255
-    else:
-        # Partially-masked pixels set to masked
-        mask_array[mask_array < 255] = 0
-
-    return mask_array
-
-
 def load_image(image_path, band_indices=None, bit_depth=None,
                curve_function=None):
     '''Loads an image into a colorimage. If no bit depth is supplied, 8-bit
