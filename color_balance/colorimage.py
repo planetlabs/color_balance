@@ -134,8 +134,8 @@ def get_histogram(band, mask=None):
     bit_depth = 256
     hist = cv2.calcHist([band], [0], mask, [bit_depth], [0, bit_depth])
 
-    # Convert histogram to 1D array of integers
-    int_hist = hist[:,0].astype(numpy.int_)
+    # Convert histogram to 1D array
+    int_hist = hist[:,0]
     return int_hist
 
 
