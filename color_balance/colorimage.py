@@ -134,8 +134,9 @@ def get_histogram(band, mask=None):
     bit_depth = 256
     hist = cv2.calcHist([band], [0], mask, [bit_depth], [0, bit_depth])
 
-    # Convert histogram to 1D array
-    int_hist = hist[:,0]
+    # cv2.calcHist returns a 2D float array
+    # Convert histogram to 1D array of ints
+    int_hist = hist[:,0].astype(numpy.int)
     return int_hist
 
 
@@ -149,19 +150,37 @@ def get_cdf(band, mask=None):
     :returns: cumulative sum of pixels at each possible intensity value
     '''
     hist = get_histogram(band, mask)
+
+    # If the datatype of the histogram is not int, CDF calculation is off, for
+    # example, CDF may never reach 1
+    assert hist.dtype == numpy.int
+
     normalized_hist = hist * (1.0 / hist.sum())
     cdf = normalized_hist.cumsum()
     return cdf
+
+class CDFException(Exception):
+    pass
+
+
+def _check_cdf(test_cdf):
+    '''Checks that CDF monotonically increases and has a maximum value of 1'''
+    if numpy.any(numpy.diff(test_cdf) < 0):
+        raise CDFException('not monotonically increasing')
+
+    if test_cdf[-1] != 1:
+        raise CDFException('maximum value not equal to 1')
+
+    if test_cdf[0] < 0:
+        raise CDFException('minimum value less than 0')
 
 
 def cdf_match_lut(in_cdf, match_cdf):
     '''Create a look up table for matching the input cdf to the match cdf. At
     each intensity, this algorithm gets the value of the input cdf, then finds
     the intensity at which the match cdf has the same value.'''
-
-    if numpy.any(numpy.diff(in_cdf) < 0) or \
-       numpy.any(numpy.diff(match_cdf < 0)):
-        raise Exception("Not a valid cdf - should monotonically increase.")
+    _check_cdf(in_cdf)
+    _check_cdf(match_cdf)
     assert len(in_cdf) == len(match_cdf), \
         "cdfs don't have same number of entries"
 

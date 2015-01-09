@@ -125,13 +125,13 @@ class Tests(unittest.TestCase):
         test_mask = numpy.array([[255, 0], [255, 0]], dtype=numpy.uint8)
 
         # All entries at intensity 1
-        expected = numpy.zeros((256))
+        expected = numpy.zeros((256), dtype=numpy.int)
         expected[1] = 4
         hist = colorimage.get_histogram(test_band)
         numpy.testing.assert_array_equal(hist, expected)
 
         # Two values masked, count should drop by two
-        expected = numpy.zeros((256))
+        expected = numpy.zeros((256), dtype=numpy.int)
         expected[1] = 2
         hist = colorimage.get_histogram(test_band, mask=test_mask)
         numpy.testing.assert_array_equal(hist, expected)
@@ -154,13 +154,26 @@ class Tests(unittest.TestCase):
         cdf = colorimage.get_cdf(test_band, mask=test_mask)
         numpy.testing.assert_array_equal(cdf, expected)
 
+    def test__check_cdf(self):
+        not_mono = numpy.array((0, 1, 0, 1))
+        self.assertRaises(
+            colorimage.CDFException, colorimage._check_cdf, not_mono)
+
+        max_too_high = numpy.array((0, 0.5, 2))
+        self.assertRaises(
+            colorimage.CDFException, colorimage._check_cdf, max_too_high)
+
+        max_too_low = numpy.array((0, 0.5, 0.999999))
+        self.assertRaises(
+            colorimage.CDFException, colorimage._check_cdf, max_too_low)
+
     def test_cdf_match_lut(self):
         # Intensity values at 3,4,5,6
         test_cdf = numpy.zeros((8))
         test_cdf[3] = 0.25
         test_cdf[4] = .5
         test_cdf[5] = 0.75
-        test_cdf[6:] = 1
+        test_cdf[6:] = 1.0
 
         # Intensity values at 1,2,3,4 (test minus 2)
         match_cdf = numpy.zeros((8))
@@ -170,19 +183,23 @@ class Tests(unittest.TestCase):
         match_cdf[4:] = 1
 
         # Test all values are mapped down by 2
-        # (non-represented entries don't matter, ignore)
-        expected_lut = numpy.array([99, 99, 99, 1, 2, 3, 4, 99])
+        expected_lut = numpy.array([0, 0, 0, 1, 2, 3, 4, 4])
         lut = colorimage.cdf_match_lut(test_cdf, match_cdf)
-        numpy.testing.assert_array_equal(lut[3:7], expected_lut[3:7])
+        numpy.testing.assert_array_equal(lut, expected_lut)
 
         # Intensity values all at 1
         match_cdf = numpy.zeros((8))
         match_cdf[1:] = 1
 
         # Test all values are mapped to 1
-        expected_lut = numpy.array([99, 99, 99, 1, 1, 1, 1, 99])
+        expected_lut = numpy.array([0, 0, 0, 1, 1, 1, 1, 1])
         lut = colorimage.cdf_match_lut(test_cdf, match_cdf)
-        numpy.testing.assert_array_equal(lut[3:7], expected_lut[3:7])
+        numpy.testing.assert_array_equal(lut, expected_lut)
+
+        test_cdf = numpy.array([0, 9.99999881e-01])
+        match_cdf = numpy.array([0, 1])
+        self.assertRaises(colorimage.CDFException, colorimage.cdf_match_lut, test_cdf, match_cdf)
+
 
     def test_scale_offset_lut(self):
         test_lut = numpy.array(range(10))
