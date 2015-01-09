@@ -167,6 +167,8 @@ class Tests(unittest.TestCase):
         self.assertRaises(
             colorimage.CDFException, colorimage._check_cdf, max_too_low)
 
+        colorimage._check_cdf(numpy.array((0, 0.5, 1)))
+
     def test_cdf_match_lut(self):
         # Intensity values at 3,4,5,6
         test_cdf = numpy.zeros((8))

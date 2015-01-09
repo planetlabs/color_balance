@@ -27,6 +27,8 @@ class HistogramDistanceTests(unittest.TestCase):
         im1 = cv2.merge([band]*3)
         hd.image_distances(distance_function, im1, im1)        
 
+    @unittest.skipIf(cv2.__version__ != '$Rev: 4557 $',
+        "chi_squared results differ between cv2 versions. Test only valid for rev 4557")
     def test_chi_squared(self):
         same_histogram_distance = hd.chi_squared(
             self.uniform_histogram,
@@ -36,22 +38,22 @@ class HistogramDistanceTests(unittest.TestCase):
         downsampled_histogram_distance = hd.chi_squared(
             self.uniform_histogram,
             self.downsampled_uniform_histogram)
-        self.assertAlmostEquals(downsampled_histogram_distance, 6.0, 1)
+        self.assertAlmostEquals(downsampled_histogram_distance, 4.0, 1)
 
         compressed_histogram_distance = hd.chi_squared(
             self.uniform_histogram,
             self.uniform_first_half_histogram)
-        self.assertAlmostEquals(compressed_histogram_distance, 6.0, 1)
+        self.assertAlmostEquals(compressed_histogram_distance, 4.0, 1)
 
         translated_histogram_distance = hd.chi_squared(
             self.uniform_first_half_histogram,
             self.uniform_middle_histogram)
-        self.assertAlmostEquals(translated_histogram_distance, 2.0, 1)
+        self.assertAlmostEquals(translated_histogram_distance, 4.0, 1)
 
         nonoverlapping_histogram_distance = hd.chi_squared(
             self.uniform_first_half_histogram,
             self.uniform_second_half_histogram)
-        self.assertAlmostEquals(nonoverlapping_histogram_distance, 6.0, 1)
+        self.assertAlmostEquals(nonoverlapping_histogram_distance, 12.0, 1)
 
     def test_correlation(self):
         same_histogram_distance = hd.correlation(
