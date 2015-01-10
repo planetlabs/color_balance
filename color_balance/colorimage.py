@@ -168,11 +168,11 @@ def _check_cdf(test_cdf):
     if numpy.any(numpy.diff(test_cdf) < 0):
         raise CDFException('not monotonically increasing')
 
-    if test_cdf[-1] != 1:
-        raise CDFException('maximum value not equal to 1')
+    if abs(test_cdf[-1] - 1.0) * 10**10 > 1:
+        raise CDFException('maximum value {} not close enough to 1.0'.format(test_cdf[-1]))
 
     if test_cdf[0] < 0:
-        raise CDFException('minimum value less than 0')
+        raise CDFException('minimum value {} less than 0'.format(test_cdf[0]))
 
 
 def cdf_match_lut(in_cdf, match_cdf):
@@ -189,11 +189,13 @@ def cdf_match_lut(in_cdf, match_cdf):
     # stretches the intensity values to min/max available intensities
     # even when matching CDF doesn't have entries at min/max intensities
     # (confirmed by unit tests)
-    lut = numpy.zeros(len(in_cdf), dtype=numpy.uint8)
+    lut = numpy.arange(len(in_cdf), dtype=numpy.int)
     for i, c_val in enumerate(in_cdf):
         match_i = numpy.searchsorted(match_cdf, c_val)
         lut[i] = match_i
 
+    if numpy.any(numpy.diff(lut) < 0):
+        raise LUTException('cdf_match lut not monotonically increasing')
     return lut
 
 
