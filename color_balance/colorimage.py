@@ -194,9 +194,17 @@ def cdf_match_lut(in_cdf, match_cdf):
         match_i = numpy.searchsorted(match_cdf, c_val)
         lut[i] = match_i
 
+    # Clip to max/min values of band, as determined from cdf
+    # This is necessary because numpy.searchsorted maps a value
+    # to either 0 or len(array) if it doesn't find a target location
+    max_value = numpy.argmax(match_cdf == match_cdf.max())
+    min_value = numpy.argmin(match_cdf == match_cdf.min())
+    numpy.clip(lut, min_value, max_value, lut)
+
     if numpy.any(numpy.diff(lut) < 0):
         raise LUTException('cdf_match lut not monotonically increasing')
-    return lut
+
+    return lut.astype(numpy.uint8)
 
 
 def scale_offset_lut(in_lut, scale=1.0, offset=0):
