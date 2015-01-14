@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+import logging
+
 import numpy
 import cv2
 
@@ -44,6 +46,14 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
 
     in_mean, in_std = cv2.meanStdDev(in_img, mask=in_mask)
     ref_mean, ref_std = cv2.meanStdDev(ref_img, mask=ref_mask)
+    logging.info("Input image mean: {}" \
+        .format([float(m) for m in in_mean]))
+    logging.info("Input image stddev: {}" \
+        .format([float(s) for s in in_std]))
+    logging.info("Reference image mean: {}" \
+        .format([float(m) for m in ref_mean]))
+    logging.info("Reference image stddev: {}" \
+        .format([float(s) for s in ref_std]))
 
     out_luts = []
     in_lut = numpy.array(range(0, 256), dtype=numpy.uint8)
