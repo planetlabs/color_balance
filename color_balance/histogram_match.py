@@ -21,6 +21,10 @@ import cv2
 from color_balance import colorimage as ci
 
 
+class CDFException(Exception):
+    pass
+
+
 def match_histogram(luts_calculation_function, in_img, ref_img,
         in_mask=None, ref_mask=None):
     '''Runs luts_calculation_function on in_img and ref_img (using in_mask and
@@ -36,9 +40,56 @@ def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None):
     for iband, rband in zip(cv2.split(in_img), cv2.split(ref_img)):
         in_cdf = ci.get_cdf(iband, mask=in_mask)
         ref_cdf = ci.get_cdf(rband, mask=ref_mask)
-        lut = ci.cdf_match_lut(in_cdf, ref_cdf)
+        lut = cdf_match_lut(in_cdf, ref_cdf)
         out_luts.append(lut)
     return out_luts
+
+
+def cdf_match_lut(in_cdf, match_cdf):
+    '''Create a look up table for matching the input cdf to the match cdf. At
+    each intensity, this algorithm gets the value of the input cdf, then finds
+    the intensity at which the match cdf has the same value.'''
+
+    _check_cdf(in_cdf)
+    _check_cdf(match_cdf)
+    assert len(in_cdf) == len(match_cdf), \
+        "cdfs don't have same number of entries"
+
+    # This approach is preferred over using
+    # numpy.interp(in_cdf, match_cdf, range(len(in_cdf))), which
+    # stretches the intensity values to min/max available intensities
+    # even when matching CDF doesn't have entries at min/max intensities
+    # (confirmed by unit tests)
+    lut = numpy.arange(len(in_cdf), dtype=numpy.int)
+    for i, c_val in enumerate(in_cdf):
+        match_i = numpy.searchsorted(match_cdf, c_val)
+        lut[i] = match_i
+
+    # Clip to max/min values of band, as determined from cdf
+    # This is necessary because numpy.searchsorted maps a value
+    # to either 0 or len(array) if it doesn't find a target location
+    max_value = numpy.argmax(match_cdf == match_cdf.max())
+    min_value = numpy.argmax(match_cdf > 0)
+
+    logging.info("clipping lut to [{},{}]".format(min_value, max_value))
+    numpy.clip(lut, min_value, max_value, lut)
+
+    if numpy.any(numpy.diff(lut) < 0):
+        raise Exception('cdf_match lut not monotonically increasing')
+
+    return lut.astype(numpy.uint8)
+
+
+def _check_cdf(test_cdf):
+    '''Checks that CDF monotonically increases and has a maximum value of 1'''
+    if numpy.any(numpy.diff(test_cdf) < 0):
+        raise CDFException('not monotonically increasing')
+
+    if abs(test_cdf[-1] - 1.0) * 10**10 > 1:
+        raise CDFException('maximum value {} not close enough to 1.0'.format(test_cdf[-1]))
+
+    if test_cdf[0] < 0:
+        raise CDFException('minimum value {} less than 0'.format(test_cdf[0]))
 
 
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):

@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import unittest
-import logging
 
 import numpy
 import cv2
@@ -154,56 +153,6 @@ class Tests(unittest.TestCase):
         expected[2:] = 1
         cdf = colorimage.get_cdf(test_band, mask=test_mask)
         numpy.testing.assert_array_equal(cdf, expected)
-
-    def test__check_cdf(self):
-        not_mono = numpy.array((0, 1, 0, 1))
-        self.assertRaises(
-            colorimage.CDFException, colorimage._check_cdf, not_mono)
-
-        max_too_high = numpy.array((0, 0.5, 2))
-        self.assertRaises(
-            colorimage.CDFException, colorimage._check_cdf, max_too_high)
-
-        max_too_low = numpy.array((0, 0.5, 0.999999))
-        self.assertRaises(
-            colorimage.CDFException, colorimage._check_cdf, max_too_low)
-
-        colorimage._check_cdf(numpy.array((0, 0.5, 1)))
-
-    def test_cdf_match_lut(self):
-        # Intensity values at 3,4,5,6
-        test_cdf = numpy.zeros((8))
-        test_cdf[3] = 0.25
-        test_cdf[4] = .5
-        test_cdf[5] = 0.75
-        test_cdf[6:] = 1.0
-
-        # Intensity values at 1,2,3,4 (test minus 2)
-        match_cdf = numpy.zeros((8))
-        match_cdf[1] = 0.25
-        match_cdf[2] = .5
-        match_cdf[3] = 0.75
-        match_cdf[4:] = 1
-        logging.debug("match cdf: {}".format(match_cdf))
-
-        # Test all values are mapped down by 2
-        expected_lut = numpy.array([1, 1, 1, 1, 2, 3, 4, 4])
-        lut = colorimage.cdf_match_lut(test_cdf, match_cdf)
-        numpy.testing.assert_array_equal(lut, expected_lut)
-
-        # Intensity values all at 4
-        match_cdf = numpy.zeros((8))
-        match_cdf[4:] = 1
-
-        # Test all values are mapped to 4
-        expected_lut = numpy.array([4, 4, 4, 4, 4, 4, 4, 4])
-        lut = colorimage.cdf_match_lut(test_cdf, match_cdf)
-        numpy.testing.assert_array_equal(lut, expected_lut)
-
-        test_cdf = numpy.array([0, 9.99999881e-01])
-        match_cdf = numpy.array([0, 1])
-        self.assertRaises(colorimage.CDFException, colorimage.cdf_match_lut, test_cdf, match_cdf)
-
 
     def test_scale_offset_lut(self):
         test_lut = numpy.array(range(10))

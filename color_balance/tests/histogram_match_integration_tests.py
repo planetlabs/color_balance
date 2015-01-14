@@ -1,7 +1,7 @@
 import numpy
 import unittest
 
-from color_balance import colorimage
+from color_balance import colorimage, histogram_match
 
 
 class Tests(unittest.TestCase):
@@ -19,7 +19,7 @@ class Tests(unittest.TestCase):
                 print ref_band.max()
                 in_cdf = colorimage.get_cdf(in_band)
                 ref_cdf = colorimage.get_cdf(ref_band)
-                color_lut = colorimage.cdf_match_lut(in_cdf, ref_cdf)
+                color_lut = histogram_match.cdf_match_lut(in_cdf, ref_cdf)
                 try:
                     assert numpy.array_equal(color_lut, golden_lut[color])
                 except AssertionError:
