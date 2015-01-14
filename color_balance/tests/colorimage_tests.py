@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 import unittest
+import logging
 
 import numpy
 import cv2
@@ -183,18 +184,19 @@ class Tests(unittest.TestCase):
         match_cdf[2] = .5
         match_cdf[3] = 0.75
         match_cdf[4:] = 1
+        logging.debug("match cdf: {}".format(match_cdf))
 
         # Test all values are mapped down by 2
-        expected_lut = numpy.array([0, 0, 0, 1, 2, 3, 4, 4])
+        expected_lut = numpy.array([1, 1, 1, 1, 2, 3, 4, 4])
         lut = colorimage.cdf_match_lut(test_cdf, match_cdf)
         numpy.testing.assert_array_equal(lut, expected_lut)
 
-        # Intensity values all at 1
+        # Intensity values all at 4
         match_cdf = numpy.zeros((8))
-        match_cdf[1:] = 1
+        match_cdf[4:] = 1
 
-        # Test all values are mapped to 1
-        expected_lut = numpy.array([0, 0, 0, 1, 1, 1, 1, 1])
+        # Test all values are mapped to 4
+        expected_lut = numpy.array([4, 4, 4, 4, 4, 4, 4, 4])
         lut = colorimage.cdf_match_lut(test_cdf, match_cdf)
         numpy.testing.assert_array_equal(lut, expected_lut)
 

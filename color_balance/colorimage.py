@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+import logging
+
 import numpy
 import cv2
 
@@ -198,7 +200,9 @@ def cdf_match_lut(in_cdf, match_cdf):
     # This is necessary because numpy.searchsorted maps a value
     # to either 0 or len(array) if it doesn't find a target location
     max_value = numpy.argmax(match_cdf == match_cdf.max())
-    min_value = numpy.argmin(match_cdf == match_cdf.min())
+    min_value = numpy.argmax(match_cdf > 0)
+
+    logging.info("clipping lut to [{},{}]".format(min_value, max_value))
     numpy.clip(lut, min_value, max_value, lut)
 
     if numpy.any(numpy.diff(lut) < 0):
