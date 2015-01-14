@@ -214,20 +214,20 @@ def cdf_match_lut(in_cdf, match_cdf):
 def scale_offset_lut(in_lut, scale=1.0, offset=0):
     '''Creates a lut that maps intensity to new values based on scale and
     offset but clips the new values at the intensity extents.'''
-    out_lut = in_lut.copy()
-
     # No adjustments are necessary, return lut copy
     if scale == 1 and offset == 0:
-        return out_lut
+        logging.info("skipped adjusting lut because scale is 1 and offset is 0")
+        return in_lut.copy()
+
+    logging.info("adjusting lut with scale {} and offset {}" \
+        .format(float(scale), float(offset)))
+    out_lut = (1.0 * scale) * in_lut + offset
 
     min_val = 0
     max_val = len(out_lut) - 1
-    for i, intensity in enumerate(in_lut):
-        new_int = (1.0 * scale) * intensity + offset
-
-        # Clip lut values to min/max
-        out_lut[i] = min(max(new_int, min_val), max_val)
-    return out_lut
+    logging.info("clipping lut to [{},{}]".format(min_val, max_val))
+    numpy.clip(out_lut, min_val, max_val, out_lut)
+    return out_lut.astype(numpy.uint8)
 
 
 def apply_lut(band, lut):
