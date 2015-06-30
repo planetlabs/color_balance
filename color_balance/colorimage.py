@@ -1,4 +1,4 @@
-'''
+"""
 Copyright 2014 Planet Labs, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +12,12 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
+
 import logging
 import warnings
 
-import numpy
+import numpy as np
 import cv2
 
 from osgeo import gdal, gdal_array
@@ -38,7 +39,8 @@ class LUTException(Exception):
 
 def convert_to_colorimage(cimage, band_indices=None,
                           bit_depth=None, curve_function=None):
-    '''Creates a 3-band, 8-bit BGR colorimage from the bands of the input RGB
+    """
+    Creates a 3-band, 8-bit BGR colorimage from the bands of the input RGB
     CImage. If band indices are provided, they are used to identify the red,
     green, and blue bands of the CImage, respectively. If the CImage is
     16-bit, the intensity values of the bands are scaled to 8-bit. In this
@@ -56,7 +58,8 @@ def convert_to_colorimage(cimage, band_indices=None,
     :returns: colorimage (3-band, 8-bit BRG openCV array), mask (1-band, 8-bit
         array where 0 corresponds to masked pixels and 255 corresponds to
         unmasked pixels), image (same as input CImage)
-    '''
+    """
+
     if band_indices is None:
         if len(cimage.bands) != 3:
             raise ImagePropertyException("CImage is not 3-band")
@@ -68,7 +71,7 @@ def convert_to_colorimage(cimage, band_indices=None,
 
     # Make a mask from the CImage alpha channel
     if cimage.alpha is not None:
-        cmask = cimage.alpha.astype(numpy.uint8)
+        cmask = cimage.alpha.astype(np.uint8)
     else:
         cmask = mask.create_mask(cimage.bands[0])
 
@@ -78,7 +81,7 @@ def convert_to_colorimage(cimage, band_indices=None,
             cimage.bands[i].dtype.type) != gdal.GDT_Byte
 
         # Make RGB band image
-        ntype = numpy.uint16 if bits16 else numpy.uint8
+        ntype = np.uint16 if bits16 else np.uint8
         cimage.bands[i].astype(ntype).dtype
         bands.append(cimage.bands[i].astype(ntype))
 
@@ -89,18 +92,19 @@ def convert_to_colorimage(cimage, band_indices=None,
     # Scale the band intensities and mask out-of-range pixels
     out_bands = []
     for band in bands:
+
         # If 16-bit, convert to 8-bit, assuming 16-bit image is using the
         # entire bit depth unless bit depth is given
-        if band.dtype == numpy.uint16:
+        if band.dtype == np.uint16:
             if bit_depth is not None:
                 band = (band / (bit_depth / 2 ** 8))
             else:
                 band = (band / 2 ** 8)
-        elif band.dtype != numpy.uint8:
+        elif band.dtype != np.uint8:
             raise ImagePropertyException(
                 "Band type is {}, should be {} or {}".
                 format(band.dtype,
-                       numpy.uint8, numpy.uint16))
+                       np.uint8, np.uint16))
 
         # Mask out values above or below the 8-bit extents
         # This is only necessary if bit depth is given
@@ -108,47 +112,38 @@ def convert_to_colorimage(cimage, band_indices=None,
         cmask[clip_max] = 0
         clip_min = band < 0
         cmask[clip_min] = 0
-        out_bands.append(band.astype(numpy.uint8))
+        out_bands.append(band.astype(np.uint8))
 
-    cimg = rgb_bands_to_colorimage(out_bands)
+
+    cimg = np.dstack(out_bands)
     return cimg, cmask
 
 
-def rgb_bands_to_colorimage(rgb_bands):
-    return cv2.merge(list(reversed(rgb_bands)))
-
-
-def colorimage_to_rgb_bands(c_img):
-    return reversed(cv2.split(c_img))
-
-
 def get_histogram(band, mask=None):
-    '''Calculate the histogram of a band. If a mask is provided, masked pixels
+    """
+    Calculate the histogram of a band. If a mask is provided, masked pixels
     are not considered in the histogram calculation.
 
-    :param numpy array band: source for calculating histogram
-    :param numpy array mask: array containing zero values at locations where
-        pixels should not be considered, 255 elsewhere
+    :param band: ndarray of the source for calculating histogram
+    :param mask: ndarray containing zero values at locations where
+                 pixels should not be considered, 255 elsewhere.
     :returns: count of pixels at each possible intensity value
-    '''
+    """
+    
+    # TODO: Remove when supporting large bitdepths
     if band.max() > 255 or band.min() < 0:
         raise OutOfRangeException("Band values outside of [0, 255]")
 
     bit_depth = 256
-    hist = cv2.calcHist([band], [0], mask, [bit_depth], [0, bit_depth])
-
-    # cv2.calcHist returns a 2D float array
-    # Convert histogram to 1D array of ints
-    int_hist = hist[:,0].astype(numpy.int)
-    return int_hist
+    return np.histogram(band.ravel(), bins=bit_depth, range=(0, bit_depth))[0]
 
 
 def get_cdf(band, mask=None):
     '''Calculate the cumulative distribution function for the band. If a mask
     is provided, masked pixels are not considered in the calculation.
 
-    :param numpy array band: source for calculating cdf
-    :param numpy array mask: array containing zero values at locations where
+    :param np array band: source for calculating cdf
+    :param np array mask: array containing zero values at locations where
         pixels should not be considered, 255 elsewhere
     :returns: cumulative sum of pixels at each possible intensity value
     '''
@@ -156,7 +151,7 @@ def get_cdf(band, mask=None):
 
     # If the datatype of the histogram is not int, CDF calculation is off, for
     # example, CDF may never reach 1
-    assert hist.dtype == numpy.int
+    assert hist.dtype == np.int
 
     normalized_hist = hist * (1.0 / hist.sum())
     cdf = normalized_hist.cumsum()
@@ -190,8 +185,8 @@ def scale_offset_lut(in_lut, scale=1.0, offset=0):
     min_val = 0
     max_val = len(out_lut) - 1
     logging.info("clipping lut to [{},{}]".format(min_val, max_val))
-    numpy.clip(out_lut, min_val, max_val, out_lut)
-    return out_lut.astype(numpy.uint8)
+    np.clip(out_lut, min_val, max_val, out_lut)
+    return out_lut.astype(np.uint8)
 
 
 def apply_lut(band, lut):
@@ -199,7 +194,7 @@ def apply_lut(band, lut):
     if lut.dtype != band.dtype:
         raise LUTException("Band ({}) and lut ({}) must be the same data " +
             "type.").format(band.dtype, lut.dtype)
-    return numpy.take(lut, band, mode='clip')
+    return np.take(lut, band, mode='clip')
 
 
 def apply_luts(image, luts):
