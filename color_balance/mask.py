@@ -63,18 +63,21 @@ def map_masked(img, mask, value=0):
     
     .. todo:: operation might be doable with array broadcasting.
     """
+    
+    shape = img.shape
+    img = img.reshape((shape[0], shape[1], -1))
 
     height, width, bands = img.shape
     
     for bidx in range(bands):
         img[:, :, bidx][mask == 0] = value
     
-    return img
+    return img.reshape(shape)
 
 
 def get_mask_percent(mask):
     '''Helper function for determining how many pixels are masked.'''
     cond = mask == 0
-    num_masked = numpy.extract(cond, mask).size
+    num_masked = np.extract(cond, mask).size
     mask_percent = float(100 * num_masked) / mask.size
     return mask_percent
