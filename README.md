@@ -1,9 +1,25 @@
-color_balance
-=============
+# color_balance
 
 Balance your colors!!
 
 color_balance implements algorithms for reading and applying the color information between overlapping georeferenced images with support for masking out pixels.
+
+
+## Installation
+
+    pip install color_balance
+    
+
+## Development
+
+Tests may be run with [pytest](http://pytest.org/latest/).
+
+    py.test tests
+    
+To install test dependencies:
+
+    pip install -e .[test]
+
 
 ## Development Environment
 
@@ -27,13 +43,8 @@ Nosetests can be used to run the unit tests:
     nosetests ./tests
 ```
 
-## Packaging
-
-The color_balance python package is hosted on [Pypi](https://pypi.python.org/pypi/color_balance/).
-
 ## Dependencies
 
 python 2.7
 python-numpy (>= 1.6)
-python-gdal (>= 1.11)
-python-opencv >=2.3.1-7
+python-gdal (< 2.0)

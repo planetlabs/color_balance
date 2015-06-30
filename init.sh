@@ -18,7 +18,7 @@ sudo apt-get install -y --force-yes \
     build-essential python-dev \
     python-pip python-numpy \
     python-nose python-nosexcover pylint pep8 \
-    python-gdal python-opencv
+    python-gdal
 
 # install color_balance
 echo $TOP | sudo tee /usr/local/lib/python2.7/dist-packages/color_balance.pth
