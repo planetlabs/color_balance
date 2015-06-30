@@ -13,8 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-import numpy
-from osgeo import  gdal
+
+import numpy as np
+from osgeo import gdal
 import cv2
 
 
@@ -52,10 +53,7 @@ def create_mask(band, value=None):
 
 def combine_masks(masks):
     '''Combines masks into one mask'''
-    mask = masks[0]
-    for add_mask in masks[1:]:
-        mask[add_mask == 0] = 0
-    return mask
+    return np.logical_and(*[masks])
 
 
 def map_masked(img, mask, value=0):
