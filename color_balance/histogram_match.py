@@ -95,8 +95,17 @@ def _check_cdf(test_cdf):
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
     _check_match_images(in_img, ref_img)
 
-    in_mean, in_std = cv2.meanStdDev(in_img, mask=in_mask)
-    ref_mean, ref_std = cv2.meanStdDev(ref_img, mask=ref_mask)
+    height, width, bands = in_img
+    
+    in_tmp = in_img.reshape((height * width, bands))
+    ref_tmp = ref_img.reshape((height * width, bands))
+    
+    in_mean = np.mean(in_tmp, axis=0)
+    in_std = np.std(in_tmp, axis=0)
+    
+    ref_mean = np.mean(ref_tmp, axis=0)
+    ref_std = npstd(ref_tmp, axis=0)
+    
     logging.info("Input image mean: {}" \
         .format([float(m) for m in in_mean]))
     logging.info("Input image stddev: {}" \
@@ -108,14 +117,18 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
 
     out_luts = []
     in_lut = numpy.array(range(0, 256), dtype=numpy.uint8)
-    for i, band in enumerate(cv2.split(in_img)):
-        if in_std[i] == 0:
+
+    for bidx in range(bands):
+
+        if in_std[bidx] == 0:
             scale = 0
         else:
-            scale = float(ref_std[i])/in_std[i]
-        offset = ref_mean[i] - scale*in_mean[i] 
+            scale = float(ref_std[bidx]) / in_std[bidx]
+
+        offset = ref_mean[bidx] - scale * in_mean[bidx]
         lut = ci.scale_offset_lut(in_lut, scale=scale, offset=offset)
         out_luts.append(lut)
+
     return out_luts
 
 
