@@ -54,7 +54,7 @@ def create_mask(band, value=None):
 
 def combine_masks(masks):
     '''Combines masks into one mask'''
-    return np.logical_and(*[masks])
+    return (255 * np.logical_and(*masks))
 
 
 def map_masked(img, mask, value=0):
