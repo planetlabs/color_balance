@@ -16,7 +16,6 @@ limitations under the License.
 
 import numpy as np
 from osgeo import gdal
-import cv2
 
 
 def load_mask(mask_path, conservative=True):
@@ -44,10 +43,12 @@ def create_mask(band, value=None):
     '''Creates an openCV mask of the same size as the input band. If a value
     is provided, the locations of pixels equal to the value are added to the
     mask.'''
-    mask = 255 * numpy.ones(band.shape, dtype=numpy.uint8)
-    if value is not None:
-        cond = band == value
-        mask[cond] = 0
+
+    mask = 255 * np.ones_like(band, dtype=np.uint8)
+
+    if value:
+        mask[band == value] = 0
+
     return mask
 
 
@@ -57,12 +58,17 @@ def combine_masks(masks):
 
 
 def map_masked(img, mask, value=0):
-    '''Maps intensity values of pixels that are masked to a new value'''
-    channels = []
-    for channel in cv2.split(img):
-        channel[mask == 0] = value
-        channels.append(channel)
-    img = cv2.merge(channels)
+    """
+    Maps intensity values of pixels that are masked to a new value
+    
+    .. todo:: operation might be doable with array broadcasting.
+    """
+
+    height, width, bands = img.shape
+    
+    for bidx in range(bands):
+        img[:, :, bidx][mask == 0] = value
+    
     return img
 
 
