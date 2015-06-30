@@ -13,10 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-import logging
 
-import numpy
-import cv2
+import logging
+import numpy as np
 
 from color_balance import colorimage as ci
 
@@ -36,12 +35,20 @@ def match_histogram(luts_calculation_function, in_img, ref_img,
 
 
 def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None):
+
     out_luts = []
-    for iband, rband in zip(cv2.split(in_img), cv2.split(ref_img)):
+
+    height, width, bands = in_img.shape
+
+    for bidx in range(bands):
+        iband = in_img[:, :, bidx]
+        rband = ref_img[:, :, bidx]
+
         in_cdf = ci.get_cdf(iband, mask=in_mask)
         ref_cdf = ci.get_cdf(rband, mask=ref_mask)
         lut = cdf_match_lut(in_cdf, ref_cdf)
         out_luts.append(lut)
+
     return out_luts
 
 
@@ -56,33 +63,33 @@ def cdf_match_lut(in_cdf, match_cdf):
         "cdfs don't have same number of entries"
 
     # This approach is preferred over using
-    # numpy.interp(in_cdf, match_cdf, range(len(in_cdf))), which
+    # np.interp(in_cdf, match_cdf, range(len(in_cdf))), which
     # stretches the intensity values to min/max available intensities
     # even when matching CDF doesn't have entries at min/max intensities
     # (confirmed by unit tests)
-    lut = numpy.arange(len(in_cdf), dtype=numpy.int)
+    lut = np.arange(len(in_cdf), dtype=np.int)
     for i, c_val in enumerate(in_cdf):
-        match_i = numpy.searchsorted(match_cdf, c_val)
+        match_i = np.searchsorted(match_cdf, c_val)
         lut[i] = match_i
 
     # Clip to max/min values of band, as determined from cdf
-    # This is necessary because numpy.searchsorted maps a value
+    # This is necessary because np.searchsorted maps a value
     # to either 0 or len(array) if it doesn't find a target location
-    max_value = numpy.argmax(match_cdf == match_cdf.max())
-    min_value = numpy.argmax(match_cdf > 0)
+    max_value = np.argmax(match_cdf == match_cdf.max())
+    min_value = np.argmax(match_cdf > 0)
 
     logging.info("clipping lut to [{},{}]".format(min_value, max_value))
-    numpy.clip(lut, min_value, max_value, lut)
+    np.clip(lut, min_value, max_value, lut)
 
-    if numpy.any(numpy.diff(lut) < 0):
+    if np.any(np.diff(lut) < 0):
         raise Exception('cdf_match lut not monotonically increasing')
 
-    return lut.astype(numpy.uint8)
+    return lut.astype(np.uint8)
 
 
 def _check_cdf(test_cdf):
     '''Checks that CDF monotonically increases and has a maximum value of 1'''
-    if numpy.any(numpy.diff(test_cdf) < 0):
+    if np.any(np.diff(test_cdf) < 0):
         raise CDFException('not monotonically increasing')
 
     if abs(test_cdf[-1] - 1.0) * 10**10 > 1:
@@ -116,7 +123,7 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
         .format([float(s) for s in ref_std]))
 
     out_luts = []
-    in_lut = numpy.array(range(0, 256), dtype=numpy.uint8)
+    in_lut = np.array(range(0, 256), dtype=np.uint8)
 
     for bidx in range(bands):
 
