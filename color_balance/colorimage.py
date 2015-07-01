@@ -18,8 +18,6 @@ import logging
 import warnings
 
 import numpy as np
-import cv2
-
 from osgeo import gdal, gdal_array
 
 from color_balance import mask
@@ -198,13 +196,16 @@ def apply_lut(band, lut):
 
 
 def apply_luts(image, luts):
-    '''Changes intensity values for each band in input image based on intensity
-    look up tables (luts)'''
-    in_bands = cv2.split(image)
-    if len(in_bands) != len(luts):
+    """
+    Changes intensity values for each band in input image based on intensity
+    look up tables (luts)
+    """
+
+    height, width, bands = image.shape
+
+    if bands != len(luts):
         raise LUTException("image bands ({}) and lut ({}) must have the same" +
             " number of entries.".format(len(image), len(luts)))
 
-    out_bands = [apply_lut(band, lut) \
-        for (band, lut) in zip(in_bands, luts)]
-    return cv2.merge(out_bands)
+    out_bands = [ apply_lut(in_bands[:, :, bidx], lut[bidx]) for bidx in range(bands) ]
+    return np.dstack(out_bands)
