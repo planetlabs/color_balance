@@ -113,7 +113,7 @@ def convert_to_colorimage(cimage, band_indices=None,
         out_bands.append(band.astype(np.uint8))
 
 
-    cimg = np.dstack(out_bands)
+    cimg = np.dstack(out_bands[::-1])
     return cimg, cmask
 
 
@@ -125,26 +125,31 @@ def get_histogram(band, mask=None):
     :param band: ndarray of the source for calculating histogram
     :param mask: ndarray containing zero values at locations where
                  pixels should not be considered, 255 elsewhere.
-    :returns: count of pixels at each possible intensity value
+    :return: count of pixels at each possible intensity value
     """
     
-    # TODO: Remove when supporting large bitdepths
+    # TODO: Remove when supporting large bit depths
     if band.max() > 255 or band.min() < 0:
         raise OutOfRangeException("Band values outside of [0, 255]")
+
+    if mask is not None:
+        indices = np.where(mask == 0)
+        band = band[indices]
 
     bit_depth = 256
     return np.histogram(band.ravel(), bins=bit_depth, range=(0, bit_depth))[0]
 
 
 def get_cdf(band, mask=None):
-    '''Calculate the cumulative distribution function for the band. If a mask
+    """
+    Calculate the cumulative distribution function for the band. If a mask
     is provided, masked pixels are not considered in the calculation.
 
     :param np array band: source for calculating cdf
     :param np array mask: array containing zero values at locations where
         pixels should not be considered, 255 elsewhere
-    :returns: cumulative sum of pixels at each possible intensity value
-    '''
+    :return: cumulative sum of pixels at each possible intensity value
+    """
     hist = get_histogram(band, mask)
 
     # If the datatype of the histogram is not int, CDF calculation is off, for
