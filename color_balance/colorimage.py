@@ -212,5 +212,5 @@ def apply_luts(image, luts):
         raise LUTException("image bands ({}) and lut ({}) must have the same" +
             " number of entries.".format(len(image), len(luts)))
 
-    out_bands = [ apply_lut(in_bands[:, :, bidx], lut[bidx]) for bidx in range(bands) ]
+    out_bands = [ apply_lut(image[:, :, bidx], lut[bidx]) for bidx, lut in enumerate(luts) ]
     return np.dstack(out_bands)
