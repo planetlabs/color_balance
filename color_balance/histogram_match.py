@@ -103,8 +103,9 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
     _check_match_images(in_img, ref_img)
 
     height, width, bands = in_img.shape
-
     in_tmp = in_img.reshape((height * width, bands))
+
+    height, width, bands = ref_img.shape
     ref_tmp = ref_img.reshape((height * width, bands))
 
     in_mean = np.mean(in_tmp, axis=0)
