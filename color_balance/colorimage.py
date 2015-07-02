@@ -117,6 +117,11 @@ def convert_to_colorimage(cimage, band_indices=None,
     return cimg, cmask
 
 
+def colorimage_to_rgb_bands(c_img):
+    height, width, count = c_img.shape
+    return [  c_img[:, :, bidx] for bidx in range(count) ][::-1]
+
+
 def get_histogram(band, mask=None):
     """
     Calculate the histogram of a band. If a mask is provided, masked pixels
