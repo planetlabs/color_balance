@@ -132,16 +132,33 @@ class Tests(unittest.TestCase):
         ], dtype=np.uint8)
 
         # All entries at intensity 1
-        expected = np.zeros((256), dtype=np.int)
+        expected = np.zeros(256, dtype=np.int)
         expected[1] = 4
         hist = colorimage.get_histogram(test_band)
         np.testing.assert_array_equal(hist, expected)
 
-        # Two values masked, count should drop by two
-        expected = np.zeros((256), dtype=np.int)
+        
+        # Note: OpenCV computes an incorrect histogram array for this
+        #       test case.
+        expected = np.zeros(256, dtype=np.int)
         expected[1] = 2
         hist = colorimage.get_histogram(test_band, mask=test_mask)
         np.testing.assert_array_equal(hist, expected)
+        
+        test_band = np.array([
+            [0, 1],
+            [2, 3]
+        ], dtype=np.uint8)
+        test_mask = np.array([
+            [255, 0],
+            [255, 0]
+        ], dtype=np.uint8)
+        expected = np.zeros(256, dtype=np.int)
+        expected[1] = 1
+        expected[3] = 1
+        
+        hist = colorimage.get_histogram(test_band, mask=test_mask)
+        np.testing.assert_array_equal(expected, hist)
 
 
     def test_get_cdf(self):
@@ -156,72 +173,78 @@ class Tests(unittest.TestCase):
         ], dtype=np.uint8)
 
         # CDF goes up by 1/4 at 0, 1, 2, and 3
-        expected = (.25) * np.ones((256))
-        expected[1] = .5
-        expected[2] = .75
-        expected[3:] = 1
+        expected = np.ones(256)
+        expected[0] = 0.25
+        expected[1] = 0.5
+        expected[2] = 0.75
+
         cdf = colorimage.get_cdf(test_band)
         np.testing.assert_array_equal(cdf, expected)
 
         # 1 and 3 masked, so CDF goes up 1/2 at 0 and 2
-        expected = (.5) * np.ones((256))
-        expected[2:] = 1
+        expected = np.ones(256)
+        expected[0] = 0
+        expected[1] = 0.5
+        expected[2] = 0.5
+
         cdf = colorimage.get_cdf(test_band, mask=test_mask)
-        np.testing.assert_array_equal(cdf, expected)
-#
-#     def test_scale_offset_lut(self):
-#         test_lut = np.array(range(10))
-#
-#         # Test that the returned lut equals the entered lut if
-#         # no scale or offset is given
-#         expected = test_lut
-#         lut = colorimage.scale_offset_lut(test_lut)
-#         np.testing.assert_array_equal(lut, expected)
-#
-#         # Test clipping at top values
-#         expected = np.array([5, 6, 7, 8, 9, 9, 9, 9, 9, 9])
-#         lut = colorimage.scale_offset_lut(test_lut, offset=5)
-#         np.testing.assert_array_equal(lut, expected)
-#
-#         # Test clipping at bottom values
-#         expected = np.array([0, 0, 0, 0, 0, 0, 1, 2, 3, 4])
-#         lut = colorimage.scale_offset_lut(test_lut, offset=-5)
-#         np.testing.assert_array_equal(lut, expected)
-#
-#         # Test scaling by less than one
-#         expected = np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4])
-#         lut = colorimage.scale_offset_lut(test_lut, scale=0.5)
-#         np.testing.assert_array_equal(lut, expected)
-#
-#         # Test scaling by greater than one
-#         expected = np.array([0, 2, 4, 6, 8, 9, 9, 9, 9, 9])
-#         lut = colorimage.scale_offset_lut(test_lut, scale=2)
-#         np.testing.assert_array_equal(lut, expected)
-#
-#         # Test for clipping effects
-#         # Results should be the same as test 1 above
-#         test_lut = 2 * np.array(range(10))
-#         expected = np.array([5, 6, 7, 8, 9, 9, 9, 9, 9, 9])
-#         lut = colorimage.scale_offset_lut(test_lut, scale=0.5, offset=5)
-#         np.testing.assert_array_equal(lut, expected)
-#
-#     def test_apply_lut(self):
-#         test_band = np.array([[0, 1], [2, 3]], dtype=np.uint8)
-#
-#         test_lut = np.array(range(256), dtype=np.uint8)
-#         test_lut[test_lut < 256 - 5] += 5
-#         expected = np.array([[5, 6], [7, 8]], dtype=np.uint8)
-#         new_band = colorimage.apply_lut(test_band, test_lut)
-#         np.testing.assert_array_equal(new_band, expected)
-#
-#         test_lut = np.array(range(256), dtype=np.uint8)
-#         valid = test_lut >= 5
-#         test_lut[valid] -= 5
-#         test_lut[~valid] = 0
-#         expected = np.array([[0, 0], [0, 0]], dtype=np.uint8)
-#         new_band = colorimage.apply_lut(test_band, test_lut)
-#         np.testing.assert_array_equal(new_band, expected)
-#
-#
-# if __name__ == '__main__':
-#     unittest.main()
+        np.testing.assert_array_equal(expected, cdf)
+
+
+    def test_scale_offset_lut(self):
+        test_lut = np.array(range(10))
+
+        # Test that the returned lut equals the entered lut if
+        # no scale or offset is given
+        expected = test_lut
+        lut = colorimage.scale_offset_lut(test_lut)
+        np.testing.assert_array_equal(lut, expected)
+
+        # Test clipping at top values
+        expected = np.array([5, 6, 7, 8, 9, 9, 9, 9, 9, 9])
+        lut = colorimage.scale_offset_lut(test_lut, offset=5)
+        np.testing.assert_array_equal(lut, expected)
+
+        # Test clipping at bottom values
+        expected = np.array([0, 0, 0, 0, 0, 0, 1, 2, 3, 4])
+        lut = colorimage.scale_offset_lut(test_lut, offset=-5)
+        np.testing.assert_array_equal(lut, expected)
+
+        # Test scaling by less than one
+        expected = np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4])
+        lut = colorimage.scale_offset_lut(test_lut, scale=0.5)
+        np.testing.assert_array_equal(lut, expected)
+
+        # Test scaling by greater than one
+        expected = np.array([0, 2, 4, 6, 8, 9, 9, 9, 9, 9])
+        lut = colorimage.scale_offset_lut(test_lut, scale=2)
+        np.testing.assert_array_equal(lut, expected)
+
+        # Test for clipping effects
+        # Results should be the same as test 1 above
+        test_lut = 2 * np.array(range(10))
+        expected = np.array([5, 6, 7, 8, 9, 9, 9, 9, 9, 9])
+        lut = colorimage.scale_offset_lut(test_lut, scale=0.5, offset=5)
+        np.testing.assert_array_equal(lut, expected)
+
+
+    def test_apply_lut(self):
+        test_band = np.array([[0, 1], [2, 3]], dtype=np.uint8)
+
+        test_lut = np.array(range(256), dtype=np.uint8)
+        test_lut[test_lut < 256 - 5] += 5
+        expected = np.array([[5, 6], [7, 8]], dtype=np.uint8)
+        new_band = colorimage.apply_lut(test_band, test_lut)
+        np.testing.assert_array_equal(new_band, expected)
+
+        test_lut = np.array(range(256), dtype=np.uint8)
+        valid = test_lut >= 5
+        test_lut[valid] -= 5
+        test_lut[~valid] = 0
+        expected = np.array([[0, 0], [0, 0]], dtype=np.uint8)
+        new_band = colorimage.apply_lut(test_band, test_lut)
+        np.testing.assert_array_equal(new_band, expected)
+
+
+if __name__ == '__main__':
+    unittest.main()
