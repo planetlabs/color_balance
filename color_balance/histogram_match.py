@@ -102,17 +102,28 @@ def _check_cdf(test_cdf):
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
     _check_match_images(in_img, ref_img)
 
-    height, width, bands = in_img.shape
-    in_tmp = in_img.reshape((height * width, bands))
+    height1, width1, count1 = in_img.shape
+    height2, width2, count2 = ref_img.shape
 
-    height, width, bands = ref_img.shape
-    ref_tmp = ref_img.reshape((height * width, bands))
+    # Truthiness of color_balance masks is opposite of numpy masked arrays
+    # TODO: FIX!
+    in_mask = np.logical_not(in_mask.astype(bool))
+    ref_mask = np.logical_not(ref_mask.astype(bool))
 
-    in_mean = np.mean(in_tmp, axis=0)
-    in_std = np.std(in_tmp, axis=0)
+    in_mask = np.vstack(3 * [in_mask])
+    ref_mask = np.vstack(3 * [ref_mask])
 
-    ref_mean = np.mean(ref_tmp, axis=0)
-    ref_std = np.std(ref_tmp, axis=0)
+    in_tmp = in_img.reshape((height1 * width1, count1))
+    ref_tmp = ref_img.reshape((height2 * width2, count2))
+    
+    in_tmp = np.ma.MaskedArray(in_tmp, mask=in_mask)
+    ref_tmp = np.ma.MaskedArray(ref_tmp, mask=ref_mask)
+    
+    in_mean = in_tmp.mean(axis=0).data
+    in_std = in_tmp.std(axis=0).data
+
+    ref_mean = ref_tmp.mean(axis=0)
+    ref_std = ref_tmp.std(axis=0)
 
     logging.info("Input image mean: {}" \
         .format([float(m) for m in in_mean]))
@@ -126,7 +137,7 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
     out_luts = []
     in_lut = np.array(range(0, 256), dtype=np.uint8)
 
-    for bidx in range(bands):
+    for bidx in range(count1):
 
         if in_std[bidx] == 0:
             scale = 0
