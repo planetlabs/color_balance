@@ -102,17 +102,17 @@ def _check_cdf(test_cdf):
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
     _check_match_images(in_img, ref_img)
 
-    height, width, bands = in_img
-    
+    height, width, bands = in_img.shape
+
     in_tmp = in_img.reshape((height * width, bands))
     ref_tmp = ref_img.reshape((height * width, bands))
-    
+
     in_mean = np.mean(in_tmp, axis=0)
     in_std = np.std(in_tmp, axis=0)
-    
+
     ref_mean = np.mean(ref_tmp, axis=0)
-    ref_std = npstd(ref_tmp, axis=0)
-    
+    ref_std = np.std(ref_tmp, axis=0)
+
     logging.info("Input image mean: {}" \
         .format([float(m) for m in in_mean]))
     logging.info("Input image stddev: {}" \
