@@ -138,7 +138,7 @@ def get_histogram(band, mask=None):
         raise OutOfRangeException("Band values outside of [0, 255]")
 
     if mask is not None:
-        indices = np.where(mask == 0)
+        indices = np.where(mask != 0)
         band = band[indices]
 
     bit_depth = 256
