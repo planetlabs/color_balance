@@ -16,7 +16,6 @@ limitations under the License.
 
 import unittest
 import numpy as np
-import cv2
 
 from color_balance import colorimage, image_io as io
 
