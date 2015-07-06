@@ -154,8 +154,8 @@ class Tests(unittest.TestCase):
             [255, 0]
         ], dtype=np.uint8)
         expected = np.zeros(256, dtype=np.int)
-        expected[1] = 1
-        expected[3] = 1
+        expected[0] = 1
+        expected[2] = 1
         
         hist = colorimage.get_histogram(test_band, mask=test_mask)
         np.testing.assert_array_equal(expected, hist)
@@ -183,9 +183,8 @@ class Tests(unittest.TestCase):
 
         # 1 and 3 masked, so CDF goes up 1/2 at 0 and 2
         expected = np.ones(256)
-        expected[0] = 0
+        expected[0] = 0.5
         expected[1] = 0.5
-        expected[2] = 0.5
 
         cdf = colorimage.get_cdf(test_band, mask=test_mask)
         np.testing.assert_array_equal(expected, cdf)
