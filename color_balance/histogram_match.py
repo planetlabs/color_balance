@@ -101,29 +101,22 @@ def _check_cdf(test_cdf):
 
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
     _check_match_images(in_img, ref_img)
-
+    
+    # Create a 3d mask from the 2d mask
+    # Numpy masked arrays treat True as masked values. Opposite of OpenCV
+    in_mask = np.dstack(3 * [np.logical_not(in_mask.astype(bool))])
+    ref_mask = np.dstack(3 * [np.logical_not(ref_mask.astype(bool))])
+    
     height1, width1, count1 = in_img.shape
     height2, width2, count2 = ref_img.shape
-
-    # Truthiness of color_balance masks is opposite of numpy masked arrays
-    # TODO: FIX!
-    in_mask = np.logical_not(in_mask.astype(bool))
-    ref_mask = np.logical_not(ref_mask.astype(bool))
-
-    in_mask = np.vstack(3 * [in_mask])
-    ref_mask = np.vstack(3 * [ref_mask])
-
-    in_tmp = in_img.reshape((height1 * width1, count1))
-    ref_tmp = ref_img.reshape((height2 * width2, count2))
-
-    in_tmp = np.ma.MaskedArray(in_tmp, mask=in_mask)
-    ref_tmp = np.ma.MaskedArray(ref_tmp, mask=ref_mask)
-
-    in_mean = in_tmp.mean(axis=0).data
-    in_std = in_tmp.std(axis=0).data
-
-    ref_mean = ref_tmp.mean(axis=0).data
-    ref_std = ref_tmp.std(axis=0).data
+    
+    in_img = np.ma.MaskedArray(in_img, in_mask).reshape((height1 * width1, count1))
+    ref_img = np.ma.MaskedArray(ref_img, ref_mask).reshape((height2 * width2, count2))
+    
+    in_mean = in_img.mean(axis=0).data
+    in_std = in_img.std(axis=0).data
+    ref_mean = ref_img.mean(axis=0).data
+    ref_std = ref_img.std(axis=0).data
 
     logging.info("Input image mean: {}" \
         .format(in_mean.tolist()))
@@ -133,7 +126,7 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
         .format(ref_mean.tolist()))
     logging.info("Reference image stddev: {}" \
         .format(ref_std.tolist()))
-
+    
     out_luts = []
     in_lut = np.array(range(0, 256), dtype=np.uint8)
 
