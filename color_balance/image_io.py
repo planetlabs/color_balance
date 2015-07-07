@@ -1,4 +1,4 @@
-'''
+"""
 Copyright 2014 Planet Labs, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +12,27 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
+
 import numpy as np
 
 from osgeo import gdal, gdal_array
 from color_balance import colorimage
 
 
-def load_image(image_path, band_indices=None, bit_depth=None,
-               curve_function=None):
-    '''Loads an image into a colorimage. If no bit depth is supplied, 8-bit
-    is assumed. If no band indices are supplied, RGB is assumed.'''
+def load_image(image_path, band_indices=None, bit_depth=None, curve_function=None):
+    """
+    Loads an image into a colorimage. If no bit depth is supplied, 8-bit
+    is assumed. If no band indices are supplied, RGB is assumed.
+    
+    .. todo:: Kill CImage
+    """
+
     im_raster = CImage()
     im_raster.load(image_path)
-    img, mask = colorimage.convert_to_colorimage(im_raster, band_indices=band_indices,
-                                         bit_depth=bit_depth,
-                                         curve_function=curve_function)
-    return img, mask, im_raster
+
+    img, mask = colorimage.convert_to_colorimage(im_raster, band_indices=band_indices, bit_depth=bit_depth, curve_function=curve_function)
+    return img, mask
 
 
 def save_adjusted_image(filename, img, mask, cimage):
@@ -46,6 +50,7 @@ def save_adjusted_image(filename, img, mask, cimage):
 
 
 class CImage():
+
     '''Geospatial image file interface'''
 
     def __init__(self):
