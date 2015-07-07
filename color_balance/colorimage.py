@@ -21,18 +21,8 @@ import numpy as np
 from osgeo import gdal, gdal_array
 
 from color_balance import mask
+from color_balance import OutOfRangeException, ImagePropertyException, LUTException
 
-
-class OutOfRangeException(Exception):
-    pass
-
-
-class ImagePropertyException(Exception):
-    pass
-
-
-class LUTException(Exception):
-    pass
 
 
 def convert_to_colorimage(cimage, band_indices=None,
@@ -166,21 +156,12 @@ def get_cdf(band, mask=None):
     return cdf
 
 
-def _check_cdf(test_cdf):
-    '''Checks that CDF monotonically increases and has a maximum value of 1'''
-    warnings.warn("deprecated - moved to histogram_match", DeprecationWarning)
-
-
-def cdf_match_lut(in_cdf, match_cdf):
-    '''Create a look up table for matching the input cdf to the match cdf. At
-    each intensity, this algorithm gets the value of the input cdf, then finds
-    the intensity at which the match cdf has the same value.'''
-    warnings.warn("deprecated - moved to histogram_match", DeprecationWarning)
-
-
 def scale_offset_lut(in_lut, scale=1.0, offset=0):
-    '''Creates a lut that maps intensity to new values based on scale and
-    offset but clips the new values at the intensity extents.'''
+    """
+    Creates a lut that maps intensity to new values based on scale and
+    offset but clips the new values at the intensity extents.
+    """
+
     # No adjustments are necessary, return lut copy
     if scale == 1 and offset == 0:
         logging.info("skipped adjusting lut because scale is 1 and offset is 0")
@@ -198,7 +179,10 @@ def scale_offset_lut(in_lut, scale=1.0, offset=0):
 
 
 def apply_lut(band, lut):
-    '''Changes band intensity values based on intensity look up table (lut)'''
+    """
+    Changes band intensity values based on intensity look up table (lut)
+    """
+
     if lut.dtype != band.dtype:
         raise LUTException("Band ({}) and lut ({}) must be the same data " +
             "type.").format(band.dtype, lut.dtype)
