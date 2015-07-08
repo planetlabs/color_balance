@@ -60,28 +60,6 @@ class Tests(unittest.TestCase):
         np.testing.assert_array_equal(test_mask, expected_mask)
 
 
-    def test_combine_masks(self):
-
-        mask1 = np.array([
-            [0, 255],
-            [255, 255]
-        ], dtype=np.uint8)
-
-        mask2 = np.array([
-            [255, 0],
-            [255, 255]
-        ], dtype=np.uint8)
-
-        test_mask = mask.combine_masks([mask1, mask2])
-
-        expected_mask = np.array([
-            [0, 0],
-            [255, 255]
-        ], dtype=np.uint8)
-
-        np.testing.assert_array_equal(test_mask, expected_mask)
-
-
     def test_map_masked(self):
     
         test_band = np.array([
