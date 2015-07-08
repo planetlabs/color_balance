@@ -100,8 +100,10 @@ class Tests(unittest.TestCase):
         expected_image = np.dstack(expected)
         np.testing.assert_array_equal(test_colorimage, expected_image)
 
-        expected_mask = np.reshape(
-            np.array([255, 255, 255, 0], dtype=np.uint8), (2, 2))
+        expected_mask = np.array([
+            [255, 255],
+            [255, 0]
+        ], dtype=np.uint8)
         np.testing.assert_array_equal(test_colormask, expected_mask)
 
         # Check that curve_function downsampling is applied to bands and avoids
