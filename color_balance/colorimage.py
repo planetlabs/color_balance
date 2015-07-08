@@ -63,15 +63,7 @@ def convert_to_colorimage(cimage, band_indices=None,
     else:
         cmask = mask.create_mask(cimage.bands[0])
 
-    bands = []
-    for i in band_indices:
-        bits16 = gdal_array.NumericTypeCodeToGDALTypeCode(
-            cimage.bands[i].dtype.type) != gdal.GDT_Byte
-
-        # Make RGB band image
-        ntype = np.uint16 if bits16 else np.uint8
-        cimage.bands[i].astype(ntype).dtype
-        bands.append(cimage.bands[i].astype(ntype))
+    bands = cimage.bands
 
     # Apply curve function to RGB image
     if curve_function is not None:
@@ -80,28 +72,14 @@ def convert_to_colorimage(cimage, band_indices=None,
     # Scale the band intensities and mask out-of-range pixels
     out_bands = []
     for band in bands:
+        out_bands.append(band)
 
-        # If 16-bit, convert to 8-bit, assuming 16-bit image is using the
-        # entire bit depth unless bit depth is given
-        if band.dtype == np.uint16:
-            if bit_depth is not None:
-                band = (band / (bit_depth / 2 ** 8))
-            else:
-                band = (band / 2 ** 8)
-        elif band.dtype != np.uint8:
-            raise ImagePropertyException(
-                "Band type is {}, should be {} or {}".
-                format(band.dtype,
-                       np.uint8, np.uint16))
-
-        # Mask out values above or below the 8-bit extents
-        # This is only necessary if bit depth is given
-        clip_max = band > 255
-        cmask[clip_max] = 0
-        clip_min = band < 0
-        cmask[clip_min] = 0
-        out_bands.append(band.astype(np.uint8))
-
+    # Mask out values above or below the 8-bit extents
+    # This is only necessary if bit depth is given
+    clip_max = band > 255
+    cmask[clip_max] = 0
+    clip_min = band < 0
+    cmask[clip_min] = 0
 
     cimg = np.dstack(out_bands[::-1])
     return cimg, cmask
@@ -122,16 +100,12 @@ def get_histogram(band, mask=None):
                  pixels should not be considered, 255 elsewhere.
     :return: count of pixels at each possible intensity value
     """
-    
-    # TODO: Remove when supporting large bit depths
-    if band.max() > 255 or band.min() < 0:
-        raise OutOfRangeException("Band values outside of [0, 255]")
 
     if mask is not None:
         indices = np.where(mask != 0)
         band = band[indices]
 
-    bit_depth = 256
+    bit_depth = 256 if band.dtype is np.uint8 else 4095
     return np.histogram(band.ravel(), bins=bit_depth, range=(0, bit_depth))[0]
 
 
@@ -183,9 +157,10 @@ def apply_lut(band, lut):
     Changes band intensity values based on intensity look up table (lut)
     """
 
-    if lut.dtype != band.dtype:
-        raise LUTException("Band ({}) and lut ({}) must be the same data " +
-            "type.").format(band.dtype, lut.dtype)
+    # if lut.dtype != band.dtype:
+    #     msg = "Band ({}) and lut ({}) must be the same data type.".format(band.dtype, lut.dtype)
+    #     raise LUTException(msg)
+
     return np.take(lut, band, mode='clip')
 
 
