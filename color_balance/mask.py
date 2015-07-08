@@ -52,11 +52,6 @@ def create_mask(band, value=None):
     return mask
 
 
-def combine_masks(masks):
-    '''Combines masks into one mask'''
-    return (255 * np.logical_and(*masks))
-
-
 def map_masked(img, mask, value=0):
     """
     Maps intensity values of pixels that are masked to a new value
