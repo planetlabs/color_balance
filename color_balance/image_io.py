@@ -32,6 +32,7 @@ def load_image(image_path, band_indices=None, bit_depth=None, curve_function=Non
     im_raster.load(image_path)
 
     img, mask = colorimage.convert_to_colorimage(im_raster, band_indices=band_indices, bit_depth=bit_depth, curve_function=curve_function)
+
     return img, mask
 
 
@@ -49,9 +50,11 @@ def save_adjusted_image(filename, img, mask, cimage):
     cimage.save(filename)
 
 
-class CImage():
+class CImage(object):
+    """
+    Geospatial image file interface.
+    """
 
-    '''Geospatial image file interface'''
 
     def __init__(self):
         self.bands = []
