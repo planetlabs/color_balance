@@ -34,7 +34,7 @@ def match_histogram(luts_calculation_function, in_img, ref_img,
     return matched_img
 
 
-def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None):
+def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint8):
 
     out_luts = []
 
@@ -48,7 +48,7 @@ def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None):
 
         # TODO: ref_mask blocks entire image.
         ref_cdf = ci.get_cdf(rband, mask=ref_mask)
-        lut = cdf_match_lut(in_cdf, ref_cdf)
+        lut = cdf_match_lut(in_cdf, ref_cdf, dtype=dtype)
         out_luts.append(lut)
 
     return out_luts
