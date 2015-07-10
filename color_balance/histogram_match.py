@@ -37,7 +37,6 @@ def match_histogram(luts_calculation_function, in_img, ref_img,
 def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint8):
 
     out_luts = []
-
     height, width, bands = in_img.shape
 
     for bidx in range(bands):
@@ -45,8 +44,6 @@ def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=n
         rband = ref_img[:, :, bidx]
 
         in_cdf = ci.get_cdf(iband, mask=in_mask)
-
-        # TODO: ref_mask blocks entire image.
         ref_cdf = ci.get_cdf(rband, mask=ref_mask)
         lut = cdf_match_lut(in_cdf, ref_cdf, dtype=dtype)
         out_luts.append(lut)
@@ -82,8 +79,8 @@ def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
     # stretches the intensity values to min/max available intensities
     # even when matching CDF doesn't have entries at min/max intensities
     # (confirmed by unit tests)
-    lut = np.zeros_like(src_cdf, dtype=dtype)
     
+    lut = np.zeros_like(src_cdf, dtype=dtype)
     # TODO: What's going on here? Why not use np.take and save the python for loop?
     for i, val in enumerate(src_cdf):
 
