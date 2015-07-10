@@ -85,15 +85,11 @@ def convert_to_colorimage(cimage, band_indices=None,
     return cimg, cmask
 
 
-def colorimage_to_rgb_bands(c_img):
-    height, width, count = c_img.shape
-    return [  c_img[:, :, bidx] for bidx in range(count) ][::-1]
-
-
 def get_histogram(band, mask=None):
     """
     Calculate the histogram of a band. If a mask is provided, masked pixels
-    are not considered in the histogram calculation.
+    are not considered in the histogram calculation. The band parameter
+    is assumed to represent a 12bit image when the dtype is np.uint16.
 
     :param band: ndarray of the source for calculating histogram
     :param mask: ndarray containing zero values at locations where
@@ -105,8 +101,8 @@ def get_histogram(band, mask=None):
         indices = np.where(mask != 0)
         band = band[indices]
 
-    bit_depth = 256 if band.dtype is np.uint8 else 4095
-    return np.histogram(band.ravel(), bins=bit_depth, range=(0, bit_depth))[0]
+    bins = 255 if band.dtype == np.uint8 else 4095
+    return np.histogram(band.ravel(), bins=bins, range=[0, bins])[0]
 
 
 def get_cdf(band, mask=None):
