@@ -92,13 +92,13 @@ def get_histogram(band, mask=None):
     is assumed to represent a 12bit image when the dtype is np.uint16.
 
     :param band: ndarray of the source for calculating histogram
-    :param mask: ndarray containing zero values at locations where
-                 pixels should not be considered, 255 elsewhere.
+    :param mask: boolean ndarray containing True values at locations
+                 where pixels should not be considered.
     :return: count of pixels at each possible intensity value
     """
 
     if mask is not None:
-        indices = np.where(mask != 0)
+        indices = np.where(mask == False)
         band = band[indices]
 
     bins = 255 if band.dtype == np.uint8 else 4095
@@ -115,6 +115,7 @@ def get_cdf(band, mask=None):
         pixels should not be considered, 255 elsewhere
     :return: cumulative sum of pixels at each possible intensity value
     """
+
     hist = get_histogram(band, mask)
 
     # If the datatype of the histogram is not int, CDF calculation is off, for
