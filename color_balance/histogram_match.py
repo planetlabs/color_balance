@@ -79,13 +79,8 @@ def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
     # stretches the intensity values to min/max available intensities
     # even when matching CDF doesn't have entries at min/max intensities
     # (confirmed by unit tests)
-    
-    lut = np.zeros_like(src_cdf, dtype=dtype)
-    # TODO: What's going on here? Why not use np.take and save the python for loop?
-    for i, val in enumerate(src_cdf):
 
-        # TODO: Is this O(n^2)?
-        lut[i] = np.searchsorted(ref_cdf, val)
+    lut = np.searchsorted(ref_cdf, src_cdf).astype(dtype)
 
     # Clip to max/min values of band, as determined from CDF
     # This is necessary because np.searchsorted maps a value
