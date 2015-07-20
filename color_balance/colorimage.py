@@ -25,8 +25,7 @@ from color_balance import OutOfRangeException, ImagePropertyException, LUTExcept
 
 
 
-def convert_to_colorimage(cimage, band_indices=None,
-                          bit_depth=None, curve_function=None):
+def convert_to_colorimage(cimage, band_indices=None, bit_depth=None, curve_function=None):
     """
     Creates a 3-band, 8-bit BGR colorimage from the bands of the input RGB
     CImage. If band indices are provided, they are used to identify the red,
