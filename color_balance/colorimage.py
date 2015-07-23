@@ -198,7 +198,7 @@ def apply_lut(band, lut):
     '''Changes band intensity values based on intensity look up table (lut)'''
     if lut.dtype != band.dtype:
         raise LUTException("Band ({}) and lut ({}) must be the same data " +
-            "type.").format(band.dtype, lut.dtype)
+            "type.".format(band.dtype, lut.dtype))
     return numpy.take(lut, band, mode='clip')
 
 
