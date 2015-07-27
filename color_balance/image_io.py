@@ -1,4 +1,4 @@
-'''
+"""
 Copyright 2014 Planet Labs, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,37 +12,49 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
-import numpy
-import cv2
+"""
+
+import numpy as np
 
 from osgeo import gdal, gdal_array
 from color_balance import colorimage
 
 
-def load_image(image_path, band_indices=None, bit_depth=None,
-               curve_function=None):
-    '''Loads an image into a colorimage. If no bit depth is supplied, 8-bit
-    is assumed. If no band indices are supplied, RGB is assumed.'''
+def load_image(image_path, band_indices=None, bit_depth=None, curve_function=None):
+    """
+    Loads an image into a colorimage. If no bit depth is supplied, 8-bit
+    is assumed. If no band indices are supplied, RGB is assumed.
+    
+    .. todo:: Kill CImage
+    """
+
     im_raster = CImage()
     im_raster.load(image_path)
-    img, mask = colorimage.convert_to_colorimage(im_raster, band_indices=band_indices,
-                                         bit_depth=bit_depth,
-                                         curve_function=curve_function)
-    return img, mask, im_raster
+
+    img, mask = colorimage.convert_to_colorimage(im_raster, band_indices=band_indices, bit_depth=bit_depth, curve_function=curve_function)
+
+    return img, mask
 
 
 def save_adjusted_image(filename, img, mask, cimage):
     '''Saves the colorimage to a new raster, writing the mask as the alpha
     channel and copying the geographic information from the original raster'''
     cimage.alpha = mask
-    for i, band in enumerate(reversed(cv2.split(img))):
-        cimage.bands[i] = band.astype(numpy.uint8)
+
+    height, width, bands = img.shape
+
+    # TODO: Why not have Cimage conform to the data structure?
+    for bidx in reversed(range(bands)):
+        cimage.bands[bidx] = img[:, :, bidx].astype(np.uint8)
+    
     cimage.save(filename)
 
 
-class CImage():
-    '''Geospatial image file interface'''
+class CImage(object):
+    """
+    Geospatial image file interface.
+    """
+
 
     def __init__(self):
         self.bands = []
@@ -53,7 +65,7 @@ class CImage():
         if shape is None:
             shape = self.bands[0].shape
 
-        self.alpha = 255*numpy.ones(shape, dtype=numpy.uint8)
+        self.alpha = 255 * np.ones(shape, dtype=np.uint8)
 
     def load(self, filename):
         gdal_ds = gdal.Open(filename)
@@ -72,8 +84,8 @@ class CImage():
         # 16bit TIFF files have 16bit alpha, adjust to 8bit.
         if self.alpha is not None \
                 and gdal_ds.GetRasterBand(1).DataType == gdal.GDT_UInt16 \
-                and numpy.max(self.alpha) > 255:
-            self.alpha = (self.alpha / 256).astype(numpy.uint8)
+                and np.max(self.alpha) > 255:
+            self.alpha = (self.alpha / 256).astype(np.uint8)
 
         # Read raster bands
         for band_n in range(1, band_count+1):
@@ -128,5 +140,5 @@ class CImage():
             # To conform to 16 bit TIFF alpha expectations transform 
             # alpha to 16bit.
             if alpha_band.DataType == gdal.GDT_UInt16:
-                alpha = ((alpha.astype(numpy.uint32) * 65535) / 255).astype(
-                    numpy.uint16)
+                alpha = ((alpha.astype(np.uint32) * 65535) / 255).astype(
+                    np.uint16)

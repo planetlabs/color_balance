@@ -13,9 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-import numpy
-from osgeo import  gdal
-import cv2
+
+import numpy as np
+from osgeo import gdal
 
 
 def load_mask(mask_path, conservative=True):
@@ -43,34 +43,36 @@ def create_mask(band, value=None):
     '''Creates an openCV mask of the same size as the input band. If a value
     is provided, the locations of pixels equal to the value are added to the
     mask.'''
-    mask = 255 * numpy.ones(band.shape, dtype=numpy.uint8)
-    if value is not None:
-        cond = band == value
-        mask[cond] = 0
-    return mask
 
+    mask = 255 * np.ones_like(band, dtype=np.uint8)
 
-def combine_masks(masks):
-    '''Combines masks into one mask'''
-    mask = masks[0]
-    for add_mask in masks[1:]:
-        mask[add_mask == 0] = 0
+    if value:
+        mask[band == value] = 0
+
     return mask
 
 
 def map_masked(img, mask, value=0):
-    '''Maps intensity values of pixels that are masked to a new value'''
-    channels = []
-    for channel in cv2.split(img):
-        channel[mask == 0] = value
-        channels.append(channel)
-    img = cv2.merge(channels)
-    return img
+    """
+    Maps intensity values of pixels that are masked to a new value
+    
+    .. todo:: operation might be doable with array broadcasting.
+    """
+    
+    shape = img.shape
+    img = img.reshape((shape[0], shape[1], -1))
+
+    height, width, bands = img.shape
+    
+    for bidx in range(bands):
+        img[:, :, bidx][mask == 0] = value
+    
+    return img.reshape(shape)
 
 
 def get_mask_percent(mask):
     '''Helper function for determining how many pixels are masked.'''
     cond = mask == 0
-    num_masked = numpy.extract(cond, mask).size
+    num_masked = np.extract(cond, mask).size
     mask_percent = float(100 * num_masked) / mask.size
     return mask_percent
