@@ -18,10 +18,9 @@ import logging
 import numpy as np
 
 from color_balance import colorimage as ci
+from color_balance.exceptions import CDFException
 
 
-class CDFException(Exception):
-    pass
 
 
 def match_histogram(luts_calculation_function, in_img, ref_img,

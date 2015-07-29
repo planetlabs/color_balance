@@ -21,7 +21,7 @@ import numpy as np
 from osgeo import gdal, gdal_array
 
 from color_balance import mask
-from color_balance import OutOfRangeException, ImagePropertyException, LUTException
+from color_balance.exceptions import OutOfRangeException, ImagePropertyException, LUTException
 
 
 
