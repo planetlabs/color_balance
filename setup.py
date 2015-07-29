@@ -1,9 +1,10 @@
 import subprocess
+from codecs import open as codecs_open
+from setuptools import setup, packages
 
-try:
-    from setuptools import setup
-except:
-    from distutils.core import setup
+
+with codecs_open('README.rst', encoding='utf-8') as f:
+    long_description = f.read()
 
 
 def parse_requirements(requirements_filename='requirements.txt'):
