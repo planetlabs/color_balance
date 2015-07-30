@@ -11,7 +11,9 @@ color_balance implements algorithms for reading and applying the color informati
 Installation
 ------------
 
-    pip install color_balance
+.. code-block:: bash
+
+    $ pip install color_balance
 
 
 Example
