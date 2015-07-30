@@ -31,8 +31,12 @@ Development
 
 Tests may be run with [pytest](http://pytest.org/latest/).
 
-    py.test tests
+.. code-block:: bash
+
+    $ py.test tests
     
 To install test dependencies:
 
-    pip install -e .[test]
+.. code-block:: bash
+
+    $ pip install -e .[test]
