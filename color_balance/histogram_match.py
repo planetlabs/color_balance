@@ -34,6 +34,9 @@ def match_histogram(luts_calculation_function, in_img, ref_img,
 
 
 def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint8):
+    """
+    .. todo:: No need to store all bands in memory for this operation.
+    """
 
     out_luts = []
     height, width, bands = in_img.shape
