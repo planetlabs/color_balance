@@ -29,7 +29,8 @@ There is an example image set in ``tests/fixtures``.
 Development
 -----------
 
-Tests may be run with [pytest](http://pytest.org/latest/).
+Tests may be run with `pytest
+<http://pytest.org>`_.
 
 .. code-block:: bash
 
