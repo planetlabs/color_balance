@@ -14,6 +14,16 @@ Installation
     pip install color_balance
 
 
+Example
+-------
+
+There is an example image set in ``tests/fixtures``.
+
+.. code-block:: bash
+
+    $ color-balance tests/fixtures/source.tif tests/fixtures/reference.tif tests/fixtures/adjusted.tif
+
+
 Development
 -----------
 
