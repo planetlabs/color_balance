@@ -94,6 +94,9 @@ def get_histogram(band, mask=None):
     :param mask: boolean ndarray containing True values at locations
                  where pixels should not be considered.
     :return: count of pixels at each possible intensity value
+    
+    .. todo:: This function assumes 12bit unless the input array is uint8.
+              This should be generalized.
     """
 
     if mask is not None:
