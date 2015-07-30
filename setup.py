@@ -1,6 +1,6 @@
 import subprocess
 from codecs import open as codecs_open
-from setuptools import setup, packages
+from setuptools import setup, find_packages
 
 
 with codecs_open('README.rst', encoding='utf-8') as f:
@@ -36,6 +36,10 @@ config = dict(
           'pytest'
       ]  
     },
+    entry_points="""
+    [console_scripts]
+    color-balance=color_balance.scripts.cli:color_balance
+    """,
     classifiers=[
         "Development Status :: 1 - Planning",
         "License :: OSI Approved :: Apache Software License",
