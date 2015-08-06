@@ -50,6 +50,22 @@ def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=n
 
     return out_luts
 
+def _spread_cdf(cdf, target_size):
+    assert len(cdf) == 255
+    assert target_size == 4095
+
+    cdf_out = np.ones((4095))
+    for i in range(255):
+        if i == 0:
+            cdf_start = 0
+        else:
+            cdf_start = cdf[i-1]
+        cdf_increment = (cdf[i] - cdf_start) / 8
+
+        for j in range(8):
+            cdf_out[i*8 + j] = cdf_start + (j+1) * cdf_increment
+
+    return cdf_out
 
 def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
     """
@@ -68,7 +84,12 @@ def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
 
     _check_cdf(src_cdf)
     _check_cdf(ref_cdf)
-    
+
+    # If we have an eight target image we need to spread out the CDF
+    # artificially to use relative to 12bit values.
+    if len(src_cdf) == 4095 and len(ref_cdf) == 255:
+        ref_cdf = _spread_cdf(ref_cdf, len(src_cdf))
+
     # TODO: Why enforce the lengths to be the same? Needed for current approach,
     #       but limiting algo to fixed-bin histograms.
     assert len(src_cdf) == len(ref_cdf), \
