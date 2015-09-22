@@ -100,7 +100,7 @@ def get_histogram(band, mask=None):
         indices = np.where(mask == False)
         band = band[indices]
 
-    bins = 255 if band.dtype == np.uint8 else 4095
+    bins = 256 if band.dtype == np.uint8 else 4096
     return np.histogram(band.ravel(), bins=bins, range=[0, bins])[0]
 
 
