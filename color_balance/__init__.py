@@ -12,3 +12,7 @@ class ImagePropertyException(Exception):
 
 class LUTException(Exception):
     pass
+
+class EmptyHistogramException(Exception):
+    pass
+

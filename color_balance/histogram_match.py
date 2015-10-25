@@ -45,6 +45,7 @@ def cdf_normalization_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=n
 
         in_cdf = ci.get_cdf(iband, mask=in_mask)
         ref_cdf = ci.get_cdf(rband, mask=ref_mask)
+        #print bidx, in_cdf.sum(), ref_cdf.sum()
         lut = cdf_match_lut(in_cdf, ref_cdf, dtype=dtype)
         out_luts.append(lut)
 

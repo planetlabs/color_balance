@@ -21,7 +21,7 @@ import numpy as np
 from osgeo import gdal, gdal_array
 
 from color_balance import mask
-from color_balance import OutOfRangeException, ImagePropertyException, LUTException
+from color_balance import OutOfRangeException, ImagePropertyException, LUTException, EmptyHistogramException
 
 
 
@@ -116,10 +116,13 @@ def get_cdf(band, mask=None):
     """
 
     hist = get_histogram(band, mask)
-
+    
     # If the datatype of the histogram is not int, CDF calculation is off, for
     # example, CDF may never reach 1
     assert hist.dtype == np.int
+
+    if hist.sum() == 0:
+        raise EmptyHistogramException()
 
     normalized_hist = hist * (1.0 / hist.sum())
     cdf = normalized_hist.cumsum()
