@@ -148,7 +148,7 @@ def scale_offset_lut(in_lut, scale=1.0, offset=0):
     max_val = len(out_lut) - 1
     logging.info("clipping lut to [{},{}]".format(min_val, max_val))
     np.clip(out_lut, min_val, max_val, out_lut)
-    return out_lut.astype(np.uint8)
+    return out_lut.astype(in_lut.dtype)
 
 
 def apply_lut(band, lut):
