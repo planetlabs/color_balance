@@ -28,7 +28,7 @@ def match_histogram(luts_calculation_function, in_img, ref_img,
         in_mask=None, ref_mask=None):
     '''Runs luts_calculation_function on in_img and ref_img (using in_mask and
     ref_mask, if provided) and applies luts to in_img.'''
-    _check_match_images(in_img, ref_img)
+    _check_match_images(in_img, ref_img, in_img.dtype)
     luts = luts_calculation_function(in_img, ref_img, in_mask, ref_mask)
     matched_img = ci.apply_luts(in_img, luts)
     return matched_img
@@ -136,24 +136,29 @@ def _check_cdf(cdf):
         raise CDFException('minimum value {} less than 0'.format(cdf[0]))
 
 
-def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
-    _check_match_images(in_img, ref_img)
-    
-    # Create a 3d mask from the 2d mask
-    # Numpy masked arrays treat True as masked values. Opposite of OpenCV
-    in_mask = np.dstack(3 * [np.logical_not(in_mask.astype(bool))])
-    ref_mask = np.dstack(3 * [np.logical_not(ref_mask.astype(bool))])
-    
+def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16):
+
+    _check_match_images(in_img, ref_img, dtype)
+
     height1, width1, count1 = in_img.shape
     height2, width2, count2 = ref_img.shape
-    
-    in_img = np.ma.MaskedArray(in_img, in_mask).reshape((height1 * width1, count1))
-    ref_img = np.ma.MaskedArray(ref_img, ref_mask).reshape((height2 * width2, count2))
-    
-    in_mean = in_img.mean(axis=0).data
-    in_std = in_img.std(axis=0).data
-    ref_mean = ref_img.mean(axis=0).data
-    ref_std = ref_img.std(axis=0).data
+
+    # Create a 3d mask from the 2d mask
+    # Numpy masked arrays treat True as masked values. Opposite of OpenCV
+    if (in_mask is not None) and (ref_mask is not None):
+        in_mask = np.dstack(3 * [np.logical_not(in_mask.astype(bool))])
+        ref_mask = np.dstack(3 * [np.logical_not(ref_mask.astype(bool))])
+
+        in_img = np.ma.MaskedArray(in_img, in_mask).reshape((height1 * width1, count1))
+        ref_img = np.ma.MaskedArray(ref_img, ref_mask).reshape((height2 * width2, count2))
+    else:
+        in_img = in_img.reshape((height1 * width1, count1))
+        ref_img = in_img.reshape((height2 * width2, count2))
+
+    in_mean = np.asarray(in_img.mean(axis=0))
+    in_std = np.asarray(in_img.std(axis=0))
+    ref_mean = np.asarray(ref_img.mean(axis=0))
+    ref_std = np.asarray(ref_img.std(axis=0))
 
     logging.info("Input image mean: {}" \
         .format(in_mean.tolist()))
@@ -163,9 +168,12 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None):
         .format(ref_mean.tolist()))
     logging.info("Reference image stddev: {}" \
         .format(ref_std.tolist()))
-    
+
     out_luts = []
-    in_lut = np.array(range(0, 256), dtype=np.uint8)
+
+    minimum = np.iinfo(dtype).min
+    maximum = np.iinfo(dtype).max
+    in_lut = np.arange(minimum, maximum + 1, dtype=dtype)
 
     for bidx in range(count1):
 
@@ -185,12 +193,13 @@ class MatchImagesException(Exception):
     pass
 
 
-def _check_match_images(in_img, ref_img):
+def _check_match_images(in_img, ref_img, dtype):
     if in_img.shape[2] != ref_img.shape[2]:
         raise MatchImagesException("Images must have the same number of bands")
-   
-    max_val = 255
-    min_val = 0
+
+    minimum = 0
+    maximum = 255 if dtype == np.uint8 else 4095
+
     for image in [in_img, ref_img]:
-        if image.max() > max_val or image.min() < min_val:
-            raise MatchImagesException("Image values outside of [0, 255]")
+        if image.max() > maximum or image.min() < minimum:
+            raise MatchImagesException("Image values outside of [%d, %d]" % (minimum, maximum))
