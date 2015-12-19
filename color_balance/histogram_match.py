@@ -171,8 +171,11 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16)
 
     out_luts = []
 
-    minimum = np.iinfo(dtype).min
-    maximum = np.iinfo(dtype).max
+    # minimum = np.iinfo(dtype).min
+    # maximum = np.iinfo(dtype).max
+    # test out 12bit
+    minimum = 0
+    maximum = 4096
     in_lut = np.arange(minimum, maximum + 1, dtype=dtype)
 
     for bidx in range(count1):
