@@ -187,7 +187,7 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16)
     maximum = 4096
     in_lut = np.arange(minimum, maximum + 1, dtype=dtype)
 
-    for bidx in range(count1):
+    for bidx in range(3):
 
         if in_std[bidx] == 0:
             scale = 0
