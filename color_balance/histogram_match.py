@@ -140,25 +140,34 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16)
 
     _check_match_images(in_img, ref_img, dtype)
 
-    height1, width1, count1 = in_img.shape
-    height2, width2, count2 = ref_img.shape
-
     # Create a 3d mask from the 2d mask
     # Numpy masked arrays treat True as masked values. Opposite of OpenCV
-    if (in_mask is not None) and (ref_mask is not None):
-        in_mask = np.dstack(3 * [np.logical_not(in_mask.astype(bool))])
-        ref_mask = np.dstack(3 * [np.logical_not(ref_mask.astype(bool))])
+    if in_mask is not None:
+        indices = np.where(in_mask.astype(bool) == False)
+        r = in_img[:, :, 0][indices]
+        g = in_img[:, :, 1][indices]
+        b = in_img[:, :, 2][indices]
 
-        in_img = np.ma.MaskedArray(in_img, in_mask).reshape((height1 * width1, count1))
-        ref_img = np.ma.MaskedArray(ref_img, ref_mask).reshape((height2 * width2, count2))
     else:
-        in_img = in_img.reshape((height1 * width1, count1))
-        ref_img = in_img.reshape((height2 * width2, count2))
+        r = in_img[:, :, 0]
+        g = in_img[:, :, 1]
+        b = in_img[:, :, 2]
 
-    in_mean = np.asarray(in_img.mean(axis=0))
-    in_std = np.asarray(in_img.std(axis=0))
-    ref_mean = np.asarray(ref_img.mean(axis=0))
-    ref_std = np.asarray(ref_img.std(axis=0))
+    in_mean = np.array([r.mean(), g.mean(), b.mean()])
+    in_std = np.array([r.std(), g.std(), b.std()])
+
+    if ref_mask is not None:
+        indices = np.where(ref_mask.astype(bool) == False)
+        r_ref = ref_img[:, :, 0][indices]
+        g_ref = ref_img[:, :, 1][indices]
+        b_ref = ref_img[:, :, 2][indices]
+    else:
+        r_ref = ref_img[:, :, 0]
+        g_ref = ref_img[:, :, 1]
+        b_ref = ref_img[:, :, 2]
+
+    ref_mean = np.array([r_ref.mean(), g_ref.mean(), b_ref.mean()])
+    ref_std = np.array([r_ref.std(), g_ref.std(), b_ref.std()])
 
     logging.info("Input image mean: {}" \
         .format(in_mean.tolist()))
