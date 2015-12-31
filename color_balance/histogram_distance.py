@@ -42,7 +42,7 @@ def correlation(hist1, hist2):
     return numerator / denominator
 
 
-def jensen_shannon(hist1, hist1):
+def jensen_shannon(hist1, hist2):
 
     def entropy(prob_dist):
         return -sum([p * np.log(p, 2) for p in prob_dist if p != 0])
