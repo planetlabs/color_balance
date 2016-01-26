@@ -55,18 +55,15 @@ def _spread_cdf(cdf, target_size):
     assert len(cdf) == 255
     assert target_size == 4095
 
-    cdf_out = np.ones((4095))
-    for i in range(255):
-        if i == 0:
-            cdf_start = 0
-        else:
-            cdf_start = cdf[i-1]
-        cdf_increment = (cdf[i] - cdf_start) / 8
+    # Spoof a 12 bit domain over an 8 bit number of points
+    x = np.linspace(0, 4095, 255)
 
-        for j in range(8):
-            cdf_out[i*8 + j] = cdf_start + (j+1) * cdf_increment
+    # Create the 12 bit domain
+    xp = np.linspace(0, 4095, target_size)
 
-    return cdf_out
+    # Interpolate the points in between
+    return np.interp(xp, x, cdf)
+
 
 def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
     """
@@ -86,8 +83,8 @@ def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
     _check_cdf(src_cdf)
     _check_cdf(ref_cdf)
 
-    # If we have an eight target image we need to spread out the CDF
-    # artificially to use relative to 12bit values.
+    # If we have an 8 bit target image we need to spread out the CDF
+    # artificially to use relative to 12 bit values.
     if len(src_cdf) == 4095 and len(ref_cdf) == 255:
         ref_cdf = _spread_cdf(ref_cdf, len(src_cdf))
 
