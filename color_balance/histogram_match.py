@@ -140,10 +140,10 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16)
     # Create a 3d mask from the 2d mask
     # Numpy masked arrays treat True as masked values. Opposite of OpenCV
     if in_mask is not None:
-        indices = np.where(in_mask.astype(bool) == False)
-        r = in_img[:, :, 0][indices]
-        g = in_img[:, :, 1][indices]
-        b = in_img[:, :, 2][indices]
+        mask = ~in_mask.astype(bool)
+        r = in_img[:, :, 0][mask]
+        g = in_img[:, :, 1][mask]
+        b = in_img[:, :, 2][mask]
 
     else:
         r = in_img[:, :, 0]
@@ -154,10 +154,10 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16)
     in_std = np.array([r.std(), g.std(), b.std()])
 
     if ref_mask is not None:
-        indices = np.where(ref_mask.astype(bool) == False)
-        r_ref = ref_img[:, :, 0][indices]
-        g_ref = ref_img[:, :, 1][indices]
-        b_ref = ref_img[:, :, 2][indices]
+        mask = ~ref_mask.astype(bool)
+        r_ref = ref_img[:, :, 0][mask]
+        g_ref = ref_img[:, :, 1][mask]
+        b_ref = ref_img[:, :, 2][mask]
     else:
         r_ref = ref_img[:, :, 0]
         g_ref = ref_img[:, :, 1]
