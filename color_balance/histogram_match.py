@@ -70,7 +70,7 @@ def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
     Create a look up table for matching the source CDF to the reference CDF. At
     each intensity, this algorithm gets the value of the source CDF, then finds
     the intensity at which the reference CDF has the same value.
-    
+
     :param src_cdf:
         Source CDF represented as a 1d array.
     :param ref_cdf:
@@ -119,7 +119,7 @@ def cdf_match_lut(src_cdf, ref_cdf, dtype=np.uint8):
 def _check_cdf(cdf):
     """
     Checks that CDF monotonically increases and has a maximum value of 1.
-    
+
     .. todo:: Is this check necessary? Will np.cumsum() ever return a non-monotonically increasing function?
     """
 

@@ -116,7 +116,7 @@ def get_cdf(band, mask=None):
     """
 
     hist = get_histogram(band, mask)
-    
+
     # If the datatype of the histogram is not int, CDF calculation is off, for
     # example, CDF may never reach 1
     assert hist.dtype == np.int
