@@ -135,36 +135,24 @@ def _check_cdf(cdf):
 
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16):
 
-    _check_match_images(in_img, ref_img, dtype)
-
-    # Create a 3d mask from the 2d mask
     # Numpy masked arrays treat True as masked values. Opposite of OpenCV
     if in_mask is not None:
-        mask = ~in_mask.astype(bool)
-        r = in_img[:, :, 0][mask]
-        g = in_img[:, :, 1][mask]
-        b = in_img[:, :, 2][mask]
-
-    else:
-        r = in_img[:, :, 0]
-        g = in_img[:, :, 1]
-        b = in_img[:, :, 2]
-
-    in_mean = np.array([r.mean(), g.mean(), b.mean()])
-    in_std = np.array([r.std(), g.std(), b.std()])
+        in_mask = np.tile(~in_mask, (1, 1, in_img.shape[2]))
+        in_img = np.ma.masked_where(in_mask, in_img)
 
     if ref_mask is not None:
-        mask = ~ref_mask.astype(bool)
-        r_ref = ref_img[:, :, 0][mask]
-        g_ref = ref_img[:, :, 1][mask]
-        b_ref = ref_img[:, :, 2][mask]
-    else:
-        r_ref = ref_img[:, :, 0]
-        g_ref = ref_img[:, :, 1]
-        b_ref = ref_img[:, :, 2]
+        ref_mask = np.tile(~ref_mask, (1, 1, ref_img.shape[2]))
+        ref_img = np.ma.masked_where(ref_mask, ref_img)
 
-    ref_mean = np.array([r_ref.mean(), g_ref.mean(), b_ref.mean()])
-    ref_std = np.array([r_ref.std(), g_ref.std(), b_ref.std()])
+    # Need to make sure we check after masking invalid values
+    # Some color targets have values out of the 12-bit range.
+    _check_match_images(in_img, ref_img, dtype)
+
+    nbands = in_img.shape[2]
+    in_mean = np.array([in_img[..., i].mean() for i in range(nbands)])
+    in_std = np.array([in_img[..., i].std() for i in range(nbands)])
+    ref_mean = np.array([ref_img[..., i].mean() for i in range(nbands)])
+    ref_std = np.array([ref_img[..., i].std() for i in range(nbands)])
 
     logging.info("Input image mean: {}" \
         .format(in_mean.tolist()))
