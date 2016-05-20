@@ -123,11 +123,11 @@ class Tests(unittest.TestCase):
         match_cdf = np.array([0, 1])
         self.assertRaises(hm.CDFException, hm.cdf_match_lut, test_cdf, match_cdf)
 
-    @unittest.skip("TODO: Deprecate mean/std")
     def test_mean_std_luts(self):
         sequence_to_compressed_luts = hm.mean_std_luts(
             self.sequence_img,
-            self.compressed_img)
+            self.compressed_img,
+            dtype=np.uint8)
         sequence_to_spread_lut = np.array(
             [0]*15 + range(0, 49) + range(48, 176) + range(175, 239),
             dtype=np.uint8)
@@ -144,7 +144,8 @@ class Tests(unittest.TestCase):
 
         compressed_to_sequence_luts = hm.mean_std_luts(
             self.compressed_img,
-            self.sequence_img)
+            self.sequence_img,
+            dtype=np.uint8)
         spread_to_sequence_lut = np.array(
             range(14, 63) + range(64, 191) + range(192, 255) + [255] * 17,
             dtype=np.uint8)
