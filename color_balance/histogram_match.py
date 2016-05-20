@@ -134,6 +134,24 @@ def _check_cdf(cdf):
 
 
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16):
+    """
+    Create a look up table to linearly scale the colors of the input image to
+    the reference image based on their relative means and standard deviations.
+
+    :param in_img:
+        Input image to be scaled as a 3D (height x width x nbands) numpy array.
+    :param ref_img:
+        Reference image to base the scaling on as a 3D numpy array.
+    :param in_mask:
+        2D boolean mask to be applied to the input image. True values will not
+        be included in the color scaling calculation.
+    :param ref_mask:
+        2D boolean mask to be applied to the reference image. True values will
+        not be included in the color scaling calculation.
+    :param dtype:
+        Numpy data type used to represent the output LUT
+    :return look up table:
+    """
 
     if in_mask is not None:
         in_mask = np.tile(in_mask[..., None], (1, 1, in_img.shape[2]))
