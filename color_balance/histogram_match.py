@@ -135,13 +135,12 @@ def _check_cdf(cdf):
 
 def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16):
 
-    # Numpy masked arrays treat True as masked values. Opposite of OpenCV
     if in_mask is not None:
-        in_mask = np.tile(~in_mask, (1, 1, in_img.shape[2]))
+        in_mask = np.tile(in_mask[..., None], (1, 1, in_img.shape[2]))
         in_img = np.ma.masked_where(in_mask, in_img)
 
     if ref_mask is not None:
-        ref_mask = np.tile(~ref_mask, (1, 1, ref_img.shape[2]))
+        ref_mask = np.tile(ref_mask[..., None], (1, 1, ref_img.shape[2]))
         ref_img = np.ma.masked_where(ref_mask, ref_img)
 
     # Need to make sure we check after masking invalid values
