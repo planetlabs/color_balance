@@ -160,6 +160,32 @@ class Tests(unittest.TestCase):
              first_half_to_sequence_lut,
              second_half_to_sequence_lut])
 
+    def test_mean_std_12bit(self):
+        # Input 12-bit, with an 8-bit color target
+        input_scene = np.tile(np.arange(4096)[:, None, None], (1, 1, 3))
+        color_target = np.tile(np.arange(256)[:, None, None], (1, 1, 3))
+
+        luts = hm.mean_std_luts(input_scene.astype(np.uint16),
+                                color_target.astype(np.uint8))
+
+        np.testing.assert_array_equal(luts[0], luts[1])
+        np.testing.assert_array_equal(luts[1], luts[2])
+
+        lut = luts[0]
+        assert np.all(lut[:8] == 0)
+        assert np.all(lut[-8:] == 4096)
+        assert np.diff(lut[8:-8]).min() == 1
+        assert np.diff(lut[8:-8]).max() == 2
+
+        # Input 12-bit, with a 12-bit color target
+        input_scene = np.tile(np.arange(4096)[:, None, None], (1, 1, 3))
+        color_target = np.tile(np.arange(4096)[:, None, None], (1, 1, 3))
+
+        luts = hm.mean_std_luts(input_scene.astype(np.uint16),
+                                color_target.astype(np.uint16))
+
+        # Should be a 1 to 1 look-up-table...
+        np.testing.assert_array_equal(luts[0], np.arange(4097))
 
 if __name__ == '__main__':
     unittest.main()
