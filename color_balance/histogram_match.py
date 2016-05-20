@@ -164,12 +164,22 @@ def mean_std_luts(in_img, ref_img, in_mask=None, ref_mask=None, dtype=np.uint16)
 
     out_luts = []
 
-    # minimum = np.iinfo(dtype).min
-    # maximum = np.iinfo(dtype).max
-    # test out 12bit
-    minimum = 0
-    maximum = 4096
+    if dtype == np.uint16:
+        # Assume any 16-bit images are actually 12-bit.
+        minimum = 0
+        maximum = 4096
+    else:
+        minimum = np.iinfo(dtype).min
+        maximum = np.iinfo(dtype).max
     in_lut = np.arange(minimum, maximum + 1, dtype=dtype)
+
+    # Need to rescale for 8-bit color targets...
+    if ref_img.dtype != dtype:
+        dmin = np.iinfo(ref_img.dtype).min
+        dmax = np.iinfo(ref_img.dtype).max
+
+        ref_mean = maximum * (ref_mean - dmin) / float(dmax - dmin)
+        ref_std = maximum * ref_std / float(dmax - dmin)
 
     for bidx in range(3):
 
