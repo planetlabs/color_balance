@@ -30,10 +30,10 @@ config = dict(
     author_email='jennifer.kyle@planet.com',
     install_requires=parse_requirements(),
     packages=['color_balance'],
-    extra_require={
+    extras_require={
       'test': [
           'pytest'
-      ]  
+      ]
     },
     classifiers=[
         "Development Status :: 1 - Planning",
